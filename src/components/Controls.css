@@ -1,0 +1,63 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.control-row {
+  display: flex;
+  gap: 16px;
+}
+
+.control-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-btn.left, .control-btn.right {
+  background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn.left:active, .control-btn.right:active {
+  transform: scale(0.95);
+}
+
+.control-btn.step {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(145deg, #4a9eff, #2a7edf);
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 6px 16px rgba(74, 158, 255, 0.4);
+}
+
+.control-btn.step:active {
+  transform: scale(0.95);
+}
+
+.pause-btn {
+  padding: 10px 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (min-width: 600px) {
+  .controls { display: none; }
+}
