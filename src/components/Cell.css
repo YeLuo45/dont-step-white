@@ -11,14 +11,15 @@
 }
 
 .cell-black {
-  background: linear-gradient(145deg, #2d2d44, #1a1a2e);
-  border: 2px solid #4a4a6a;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, #00aaff, #0077cc);
+  border: 2px solid #00ccff;
+  box-shadow: 0 4px 12px rgba(0, 170, 255, 0.4);
 }
 
 .cell-white {
-  background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
-  border: 2px solid #ccc;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border: 3px solid #ff4444;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
 }
 
 .cell-empty {
@@ -28,13 +29,13 @@
 
 .cell-pointer {
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+  box-shadow: 0 0 20px rgba(0, 170, 255, 0.6);
 }
 
 .pointer-indicator {
   width: 60%;
   height: 60%;
-  border: 3px solid rgba(100, 200, 255, 0.8);
+  border: 3px solid rgba(0, 200, 255, 0.9);
   border-radius: 50%;
   animation: pulse 1s infinite;
 }
