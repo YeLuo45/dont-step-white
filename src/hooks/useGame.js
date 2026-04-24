@@ -20,10 +20,12 @@ function generateRow() {
 }
 
 function createInitialGrid() {
+  // 底部留2行空白，给玩家反应时间
   const rows = []
-  for (let i = 0; i < ROWS - 1; i++) {
+  for (let i = 0; i < ROWS - 2; i++) {
     rows.push(generateRow())
   }
+  rows.push(Array(COLS).fill(CELL_EMPTY))
   rows.push(Array(COLS).fill(CELL_EMPTY))
   return rows
 }
