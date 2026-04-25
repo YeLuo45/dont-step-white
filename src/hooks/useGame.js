@@ -9,29 +9,30 @@ import {
   STORAGE_HIGH_SCORE
 } from '../utils/constants'
 
-function generateRow() {
-  const numBlack = Math.floor(Math.random() * 3) + 1
-  const cols = [0, 1, 2, 3]
-  const shuffled = cols.sort(() => Math.random() - 0.5)
-  const blackCols = new Set(shuffled.slice(0, numBlack))
+function generateRow(pointerCol) {
+  // 经典钢琴块：每行只有1个黑块，其余为白块
+  // 玩家需在黑块落入底部前踩下
+  // 确保黑块不会落在 pointer 列，给予玩家反应时间
+  const availableCols = Array.from({ length: COLS }, (_, i) => i).filter(c => c !== pointerCol)
+  const blackCol = availableCols[Math.floor(Math.random() * availableCols.length)]
   return Array(COLS).fill(null).map((_, colIdx) =>
-    blackCols.has(colIdx) ? CELL_BLACK : CELL_WHITE
+    colIdx === blackCol ? CELL_BLACK : CELL_WHITE
   )
 }
 
-function createInitialGrid() {
+function createInitialGrid(startPointerCol) {
   // 底部留2行空白，给玩家反应时间
   const rows = []
   for (let i = 0; i < ROWS - 2; i++) {
-    rows.push(generateRow())
+    rows.push(generateRow(startPointerCol))
   }
   rows.push(Array(COLS).fill(CELL_EMPTY))
   rows.push(Array(COLS).fill(CELL_EMPTY))
   return rows
 }
 
-function gridPushDown(grid) {
-  return [...grid.slice(1), generateRow()]
+function gridPushDown(grid, pointerCol) {
+  return [...grid.slice(1), generateRow(pointerCol)]
 }
 
 function checkBottomRow(grid) {
@@ -49,6 +50,20 @@ export function useGame() {
   const { playStep, playFail } = useAudio()
   const intervalRef = useRef(null)
 
+  // Use refs to avoid stale closure in interval callback
+  const gameStateRef = useRef(gameState)
+  const scoreRef = useRef(score)
+  const highScoreRef = useRef(highScore)
+  const gridRef = useRef(grid)
+  const pointerColRef = useRef(pointerCol)
+
+  // Keep refs in sync with state
+  gameStateRef.current = gameState
+  scoreRef.current = score
+  highScoreRef.current = highScore
+  gridRef.current = grid
+  pointerColRef.current = pointerCol
+
   const calculateSpeed = useCallback((currentScore) => {
     const level = Math.floor(currentScore / SPEED_INCREASE_INTERVAL)
     const newSpeed = INITIAL_SPEED * Math.pow(SPEED_INCREASE_RATE, level)
@@ -56,7 +71,7 @@ export function useGame() {
   }, [])
 
   const startGame = useCallback(() => {
-    setGrid(createInitialGrid())
+    setGrid(createInitialGrid(pointerColRef.current))
     setPointerCol(1)
     setScore(0)
     setSpeed(INITIAL_SPEED)
@@ -67,44 +82,48 @@ export function useGame() {
   const resumeGame = useCallback(() => setGameState(GAME_STATE_PLAYING), [])
 
   const endGame = useCallback(() => {
+    const currentScore = scoreRef.current
+    const currentHighScore = highScoreRef.current
     setGameState(GAME_STATE_GAME_OVER)
-    if (score > highScore) setHighScore(score)
+    if (currentScore > currentHighScore) setHighScore(currentScore)
     playFail()
-  }, [score, highScore, setHighScore, playFail])
+  }, [setHighScore, playFail])
 
   const stepOn = useCallback(() => {
-    if (gameState !== GAME_STATE_PLAYING) return
+    if (gameStateRef.current !== GAME_STATE_PLAYING) return
     const bottomRowIdx = ROWS - 1
-    const targetCell = grid[bottomRowIdx][pointerCol]
+    const currentGrid = gridRef.current
+    const currentPointerCol = pointerColRef.current
+    const targetCell = currentGrid[bottomRowIdx][currentPointerCol]
 
     if (targetCell === CELL_EMPTY) return
     else if (targetCell === CELL_WHITE) {
       endGame()
       return
     } else {
-      const newGrid = grid.map((row, rowIdx) =>
+      const newGrid = currentGrid.map((row, rowIdx) =>
         rowIdx === bottomRowIdx
-          ? row.map((cell, colIdx) => colIdx === pointerCol ? CELL_EMPTY : cell)
+          ? row.map((cell, colIdx) => colIdx === currentPointerCol ? CELL_EMPTY : cell)
           : row
       )
       setGrid(newGrid)
-      const newScore = score + 1
+      const newScore = scoreRef.current + 1
       setScore(newScore)
       setSpeed(calculateSpeed(newScore))
       playStep()
-      if (newScore > highScore) setHighScore(newScore)
+      if (newScore > highScoreRef.current) setHighScore(newScore)
     }
-  }, [gameState, grid, pointerCol, score, highScore, endGame, calculateSpeed, playStep, setHighScore])
+  }, [endGame, calculateSpeed, playStep, setHighScore])
 
   const moveLeft = useCallback(() => {
-    if (gameState !== GAME_STATE_PLAYING) return
+    if (gameStateRef.current !== GAME_STATE_PLAYING) return
     setPointerCol(prev => Math.max(0, prev - 1))
-  }, [gameState])
+  }, [])
 
   const moveRight = useCallback(() => {
-    if (gameState !== GAME_STATE_PLAYING) return
+    if (gameStateRef.current !== GAME_STATE_PLAYING) return
     setPointerCol(prev => Math.min(COLS - 1, prev + 1))
-  }, [gameState])
+  }, [])
 
   useEffect(() => {
     if (gameState !== GAME_STATE_PLAYING) {
@@ -123,7 +142,7 @@ export function useGame() {
           setTimeout(() => endGame(), 0)
           return prevGrid
         }
-        return gridPushDown(prevGrid)
+        return gridPushDown(prevGrid, pointerColRef.current)
       })
     }, speed)
 
