@@ -20,15 +20,11 @@ function generateRow(pointerCol) {
 }
 
 function createInitialGrid(startPointerCol) {
-  // 底部留3行空白，给予玩家充足的反应时间
-  const rows = []
-  for (let i = 0; i < ROWS - 3; i++) {
-    rows.push(generateRow(startPointerCol))
-  }
-  rows.push(Array(COLS).fill(CELL_EMPTY))
-  rows.push(Array(COLS).fill(CELL_EMPTY))
-  rows.push(Array(COLS).fill(CELL_EMPTY))
-  return rows
+  // 全部留空，给玩家充足的反应时间
+  // 黑块从顶部开始下落，需要 ROWS 次 tick 才能到达底部
+  return Array(ROWS).fill(null).map(() =>
+    Array(COLS).fill(CELL_EMPTY)
+  )
 }
 
 function gridPushDown(grid, pointerCol) {
