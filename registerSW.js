@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/dont-step-white/sw.js', { scope: '/dont-step-white/' })})}
