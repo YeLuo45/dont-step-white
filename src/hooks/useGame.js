@@ -48,6 +48,8 @@ export function useGame() {
 
   // Track if player stepped on bottom row this tick (to avoid race with interval)
   const steppedOnBottomRef = useRef(false)
+  // Track if black block just reached bottom row this tick (gives player 1 tick to react)
+  const blockJustReachedBottomRef = useRef(false)
 
   // Use refs to avoid stale closure in interval callback
   const gameStateRef = useRef(gameState)
@@ -70,6 +72,8 @@ export function useGame() {
   }, [])
 
   const startGame = useCallback(() => {
+    blockJustReachedBottomRef.current = false
+    steppedOnBottomRef.current = false
     setGrid(createInitialGrid(pointerColRef.current))
     setPointerCol(1)
     setScore(0)
@@ -137,13 +141,21 @@ export function useGame() {
     intervalRef.current = setInterval(() => {
       steppedOnBottomRef.current = false  // Reset at start of each tick
       setGrid(prevGrid => {
-        if (!steppedOnBottomRef.current && checkBottomRow(prevGrid)) {
+        // Check if player failed to step on black block that just reached bottom
+        if (!steppedOnBottomRef.current && blockJustReachedBottomRef.current) {
+          // Player didn't step on the black block that reached bottom last tick
           clearInterval(intervalRef.current)
           intervalRef.current = null
           setTimeout(() => endGame(), 0)
           return prevGrid
         }
-        return gridPushDown(prevGrid, pointerColRef.current)
+        blockJustReachedBottomRef.current = false  // Reset
+        const newGrid = gridPushDown(prevGrid, pointerColRef.current)
+        // Check if a black block just reached bottom row (player has 1 tick to react)
+        if (checkBottomRow(newGrid)) {
+          blockJustReachedBottomRef.current = true
+        }
+        return newGrid
       })
     }, speed)
 
