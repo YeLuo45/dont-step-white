@@ -6,8 +6,11 @@ import { LevelSelect } from './components/LevelSelect'
 import { Settings } from './components/Settings'
 import { Leaderboard } from './components/Leaderboard'
 import { Editor, CustomLevelsList } from './components/Editor'
+import { Achievements } from './components/Achievements'
+import { AchievementToastQueue } from './components/AchievementToast'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
+import { useAchievements } from './hooks/useAchievements'
 import { LEVELS } from './utils/constants'
 import './App.css'
 
@@ -19,6 +22,7 @@ const PAGE_SETTINGS = 'settings'
 const PAGE_LEADERBOARD = 'leaderboard'
 const PAGE_EDITOR = 'editor'
 const PAGE_CUSTOM_LEVELS = 'custom-levels'
+const PAGE_ACHIEVEMENTS = 'achievements'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -45,6 +49,20 @@ function App() {
     clearAllData,
     addCoins
   } = useV3Store()
+
+  // V9: Achievement system
+  const {
+    unlockedMap,
+    stats,
+    titles,
+    totalCoinsEarned,
+    toastQueue,
+    onGameEnd,
+    claimReward,
+    unlockTitle,
+    getUnlockedAchievements,
+    dismissToast,
+  } = useAchievements()
 
   // Check URL for rank parameter on mount
   useEffect(() => {
@@ -108,6 +126,10 @@ function App() {
       addCoins(earned)
     }
     setEarnedCoins(earned)
+
+    // V9: Process achievements
+    // Note: achievements are checked in Game component, but we need to
+    // update stats here for stats that Game doesn't have access to
   }, [selectedLevel, updateLevelScore, addCoins])
 
   // Restart handler
@@ -125,6 +147,11 @@ function App() {
     if (window.location.search.includes('rank=')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
+  }, [])
+
+  // V9: Navigate to achievements
+  const handleOpenAchievements = useCallback(() => {
+    setCurrentPage(PAGE_ACHIEVEMENTS)
   }, [])
 
   // Navigate to leaderboard
@@ -215,6 +242,7 @@ function App() {
             onOpenLeaderboard={handleOpenLeaderboard}
             onStartTimedMode={handleStartTimedMode}
             onOpenEditor={handleOpenEditor}
+            onOpenAchievements={handleOpenAchievements}
           />
         )
 
@@ -293,6 +321,17 @@ function App() {
           />
         )
 
+      case PAGE_ACHIEVEMENTS:
+        return (
+          <Achievements
+            unlockedMap={unlockedMap}
+            stats={stats}
+            titles={titles}
+            totalCoinsEarned={totalCoinsEarned}
+            onBack={handleBackToHome}
+          />
+        )
+
       default:
         return null
     }
@@ -301,6 +340,7 @@ function App() {
   return (
     <div className="app">
       {renderContent()}
+      <AchievementToastQueue queue={toastQueue} onDismiss={dismissToast} />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useV4Leaderboard, encodeShareData, formatShareDate, isShareExpired } fr
 import { useAudio } from '../hooks/useAudio'
 import './GameOver.css'
 
-export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin, isTimedMode = false }) {
+export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin, isTimedMode = false, titles = [], achievementsUnlocked = [] }) {
   const [nickname, setNickname] = useState('')
   const [showShare, setShowShare] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
@@ -175,6 +175,32 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
           <div className="coins-earned">
             <span className="coins-earned-icon">🪙</span>
             <span>+{earnedCoins}</span>
+          </div>
+        )}
+
+        {/* V9: Title display */}
+        {titles && titles.length > 0 && (
+          <div className="titles-display">
+            <span className="titles-label">🏅 获得称号:</span>
+            <div className="titles-list">
+              {titles.map(t => (
+                <span key={t} className="title-badge">{t}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* V9: Achievements unlocked this game */}
+        {achievementsUnlocked && achievementsUnlocked.length > 0 && (
+          <div className="achievements-unlocked">
+            <span className="achievements-label">🏆 本局解锁成就:</span>
+            <div className="achievements-list">
+              {achievementsUnlocked.map(a => (
+                <span key={a.id} className="achievement-badge">
+                  {a.icon} {a.name}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 

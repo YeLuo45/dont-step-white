@@ -5,12 +5,26 @@ import { Controls } from './Controls'
 import { GameOver } from './GameOver'
 import { useGame } from '../hooks/useGame'
 import { useAudio } from '../hooks/useAudio'
-import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES } from '../utils/constants'
+import { useAchievements } from '../hooks/useAchievements'
+import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES, SKINS } from '../utils/constants'
 import './Game.css'
 
 export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
   // Landscape detection for portrait-only mode
   const [isLandscape, setIsLandscape] = useState(false)
+
+  // V9: Achievement system
+  const {
+    unlockedMap,
+    stats,
+    titles,
+    onGameEnd: achievementOnGameEnd,
+    claimReward,
+    getUnlockedAchievements,
+  } = useAchievements()
+
+  // Track newly unlocked achievements this game
+  const [gameAchievements, setGameAchievements] = useState([])
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -122,6 +136,34 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
   useEffect(() => {
     if (isGameOver) {
       onGameOver(score, isEndless)
+
+      // V9: Process achievements
+      const isLevelMode = !isEndless && !isTimedMode && !isCustomMode && selectedLevel
+      const levelCleared = isLevelMode && level && score >= level.passScore
+
+      achievementOnGameEnd({
+        score,
+        combo,
+        isTimedMode,
+        isEndlessMode: isEndless,
+        isLevelMode,
+        levelCleared,
+        livesLeft: lives,
+        earnedCoins,
+        maxSpeed: speed,
+      })
+
+      // V9: Collect achievements that were just unlocked (give time for async check)
+      setTimeout(() => {
+        const newlyUnlocked = getUnlockedAchievements()
+        const justUnlocked = newlyUnlocked.filter(a => {
+          // Check if this achievement was unlocked in this game session
+          return a.reward && (a.reward.title || a.reward.coins > 0 || a.reward.skin)
+        })
+        if (justUnlocked.length > 0) {
+          setGameAchievements(justUnlocked)
+        }
+      }, 500)
     }
   }, [isGameOver, score, isEndless, onGameOver])
 
@@ -309,6 +351,8 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
           onGoLevels={onGoLevels}
           equippedSkin={equippedSkin}
           isTimedMode={isTimedMode}
+          titles={gameAchievements.map(a => a.name)}
+          achievementsUnlocked={gameAchievements}
         />
       )}
     </div>
