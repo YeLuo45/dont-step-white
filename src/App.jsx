@@ -12,11 +12,13 @@ import { DailyChallenge } from './components/DailyChallenge'
 import { DailyRewards } from './components/DailyRewards'
 import { StoryMode } from './components/StoryMode'
 import { Stats } from './components/Stats'
+import { Replay } from './components/Replay'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { useAchievements } from './hooks/useAchievements'
 import { useDailyTasks } from './hooks/useDailyTasks'
 import { useStats } from './hooks/useStats'
+import { useReplay } from './hooks/useReplay'
 import { LEVELS } from './utils/constants'
 import './App.css'
 
@@ -33,6 +35,7 @@ const PAGE_DAILY_CHALLENGE = 'daily-challenge'
 const PAGE_DAILY_REWARDS = 'daily-rewards'
 const PAGE_STORY = 'story'
 const PAGE_STATS = 'stats'
+const PAGE_REPLAY = 'replay'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -84,6 +87,15 @@ function App() {
     onGameEnd: onStatsGameEnd
   } = useStats()
 
+  // V17: Replay hook
+  const {
+    parseUrlReplay,
+    clearUrlReplay,
+  } = useReplay()
+
+  // V17: Check URL for replay parameter on mount
+  const [externalReplay, setExternalReplay] = useState(null)
+
   // Check URL for rank parameter on mount
   useEffect(() => {
     const sharedData = parseUrlRank()
@@ -92,6 +104,15 @@ function App() {
       setCurrentPage(PAGE_LEADERBOARD)
     }
   }, [parseUrlRank])
+
+  // V17: Check URL for replay parameter on mount
+  useEffect(() => {
+    const replay = parseUrlReplay()
+    if (replay) {
+      setExternalReplay(replay)
+      setCurrentPage(PAGE_REPLAY)
+    }
+  }, [parseUrlReplay])
 
   // Handle navigation from game over
   const handleGoShop = useCallback(() => {
@@ -220,6 +241,12 @@ function App() {
     setCurrentPage(PAGE_STATS)
   }, [])
 
+  // V17: Navigate to replay
+  const handleOpenReplay = useCallback(() => {
+    setExternalReplay(null)
+    setCurrentPage(PAGE_REPLAY)
+  }, [])
+
   // Handle play button from shared view
   const handlePlayFromShared = useCallback(() => {
     // Clear URL parameters
@@ -307,6 +334,7 @@ function App() {
             onOpenStoryMode={handleOpenStoryMode}
             onOpenDailyRewards={handleOpenDailyRewards}
             onOpenStats={handleOpenStats}
+            onOpenReplay={handleOpenReplay}
           />
         )
 
@@ -425,6 +453,15 @@ function App() {
       case PAGE_STATS:
         return (
           <Stats onBack={handleBackToHome} />
+        )
+
+      case PAGE_REPLAY:
+        return (
+          <Replay
+            onBack={handleBackToHome}
+            externalReplay={externalReplay}
+            clearExternalReplay={() => setExternalReplay(null)}
+          />
         )
 
       default:

@@ -6,6 +6,8 @@ import { GameOver } from './GameOver'
 import { useGame } from '../hooks/useGame'
 import { useAudio } from '../hooks/useAudio'
 import { useAchievements } from '../hooks/useAchievements'
+import { useReplay } from '../hooks/useReplay'
+import { Replay } from './Replay'
 import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES, SKINS } from '../utils/constants'
 import {
   CONTROL_MODES,
@@ -32,6 +34,11 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
 
   // Track newly unlocked achievements this game
   const [gameAchievements, setGameAchievements] = useState([])
+
+  // V17: Replay recording
+  const { startRecording, recordAction, stopRecording, saveReplay } = useReplay()
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const pendingReplayRef = useRef(null)
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -212,6 +219,8 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
 
     // Reset survival time when game starts
     setSurvivalTime(0)
+    // V17: Start replay recording when game starts
+    startRecording()
     survivalTimerRef.current = setInterval(() => {
       setSurvivalTime(prev => prev + 1)
     }, 1000)
@@ -228,6 +237,13 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
   useEffect(() => {
     if (isGameOver) {
       onGameOver(score, isEndless, { combo, isTimedMode, survivalTime })
+
+      // V17: Stop recording and show save dialog
+      const replay = stopRecording(score, mode)
+      if (replay && replay.actions.length > 0) {
+        pendingReplayRef.current = replay
+        setShowSaveDialog(true)
+      }
 
       // V9: Process achievements
       const isLevelMode = !isEndless && !isTimedMode && !isCustomMode && selectedLevel
@@ -276,8 +292,10 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
       else moveRight()
     }
     stepOn()
+    // V17: Record action for replay
+    recordAction(colIdx)
     if (advancedSettings.vibrationEnabled) triggerVibration([30])
-  }, [pointerCol, moveLeft, moveRight, stepOn, advancedSettings.vibrationEnabled])
+  }, [pointerCol, moveLeft, moveRight, stepOn, recordAction, advancedSettings.vibrationEnabled])
 
   const handleKeyDown = useCallback((e) => {
     if (isIdle) {
@@ -468,6 +486,26 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
           isTimedMode={isTimedMode}
           titles={gameAchievements.map(a => a.name)}
           achievementsUnlocked={gameAchievements}
+        />
+      )}
+
+      {/* V17: Replay save dialog */}
+      {showSaveDialog && (
+        <Replay
+          mode="save-dialog"
+          score={score}
+          gameMode={mode}
+          onSave={() => {
+            if (pendingReplayRef.current) {
+              saveReplay(pendingReplayRef.current)
+              pendingReplayRef.current = null
+            }
+            setShowSaveDialog(false)
+          }}
+          onDiscard={() => {
+            pendingReplayRef.current = null
+            setShowSaveDialog(false)
+          }}
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useAudio } from '../hooks/useAudio'
 import './Menu.css'
 
-export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode, onOpenEditor, onOpenAchievements, onOpenDailyChallenge, onOpenStoryMode, onOpenDailyRewards, onOpenStats }) {
+export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode, onOpenEditor, onOpenAchievements, onOpenDailyChallenge, onOpenStoryMode, onOpenDailyRewards, onOpenStats, onOpenReplay }) {
   const { playClick, startBGM, getSettings } = useAudio()
 
   // V7: Start BGM when menu mounts
@@ -37,6 +37,7 @@ export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSetti
       <button className="menu-btn" onClick={() => handleClick(onOpenAchievements)}>🏆 成就</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenLeaderboard)}>🏆 我的战绩</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenStats)}>📊 数据统计</button>
+      <button className="menu-btn" onClick={() => handleClick(onOpenReplay)}>📹 回放</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenSettings)}>⚙️ 设置</button>
       <div className="menu-hint">
         <p>PC: ← → 移动 | 空格/点击 踩下 | D 使用道具</p>
