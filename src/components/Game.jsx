@@ -87,6 +87,8 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
 
   const [localTimeLeft, setLocalTimeLeft] = useState(levelConfig?.timeLimit)
   const intervalRef = useRef(null)
+  const survivalTimerRef = useRef(null)
+  const [survivalTime, setSurvivalTime] = useState(0)
 
   // V7: Audio hook for warning sounds
   const { playStepBlack, playStepWhite, playPowerup: playPowerupSound, playFail, playWarning } = useAudio()
@@ -198,10 +200,34 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
     }
   }, [levelConfig?.timeLimit, isPlaying, startGame, isTimedMode])
 
+  // V16: Track survival time
+  useEffect(() => {
+    if (!isPlaying) {
+      if (survivalTimerRef.current) {
+        clearInterval(survivalTimerRef.current)
+        survivalTimerRef.current = null
+      }
+      return
+    }
+
+    // Reset survival time when game starts
+    setSurvivalTime(0)
+    survivalTimerRef.current = setInterval(() => {
+      setSurvivalTime(prev => prev + 1)
+    }, 1000)
+
+    return () => {
+      if (survivalTimerRef.current) {
+        clearInterval(survivalTimerRef.current)
+        survivalTimerRef.current = null
+      }
+    }
+  }, [isPlaying, gameKeyRef.current])
+
   // Handle game over callback
   useEffect(() => {
     if (isGameOver) {
-      onGameOver(score, isEndless, { combo, isTimedMode })
+      onGameOver(score, isEndless, { combo, isTimedMode, survivalTime })
 
       // V9: Process achievements
       const isLevelMode = !isEndless && !isTimedMode && !isCustomMode && selectedLevel

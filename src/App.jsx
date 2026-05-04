@@ -11,10 +11,12 @@ import { AchievementToastQueue } from './components/AchievementToast'
 import { DailyChallenge } from './components/DailyChallenge'
 import { DailyRewards } from './components/DailyRewards'
 import { StoryMode } from './components/StoryMode'
+import { Stats } from './components/Stats'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { useAchievements } from './hooks/useAchievements'
 import { useDailyTasks } from './hooks/useDailyTasks'
+import { useStats } from './hooks/useStats'
 import { LEVELS } from './utils/constants'
 import './App.css'
 
@@ -30,6 +32,7 @@ const PAGE_ACHIEVEMENTS = 'achievements'
 const PAGE_DAILY_CHALLENGE = 'daily-challenge'
 const PAGE_DAILY_REWARDS = 'daily-rewards'
 const PAGE_STORY = 'story'
+const PAGE_STATS = 'stats'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -75,6 +78,11 @@ function App() {
   const {
     onGameEnd: onDailyTaskGameEnd
   } = useDailyTasks()
+
+  // V16: Stats hook
+  const {
+    onGameEnd: onStatsGameEnd
+  } = useStats()
 
   // Check URL for rank parameter on mount
   useEffect(() => {
@@ -153,7 +161,16 @@ function App() {
       levelCleared: false,
       shared: false
     })
-  }, [selectedLevel, updateLevelScore, addCoins, onDailyTaskGameEnd])
+
+    // V16: Update stats
+    onStatsGameEnd({
+      score,
+      combo: extraData.combo || 0,
+      survivalTime: extraData.survivalTime || 0,
+      mode: selectedLevel || 'endless',
+      isTimedMode: extraData.isTimedMode || false
+    })
+  }, [selectedLevel, updateLevelScore, addCoins, onDailyTaskGameEnd, onStatsGameEnd])
 
   // Restart handler
   const handleRestart = useCallback(() => {
@@ -196,6 +213,11 @@ function App() {
   // V14: Navigate to daily rewards
   const handleOpenDailyRewards = useCallback(() => {
     setCurrentPage(PAGE_DAILY_REWARDS)
+  }, [])
+
+  // V16: Navigate to stats
+  const handleOpenStats = useCallback(() => {
+    setCurrentPage(PAGE_STATS)
   }, [])
 
   // Handle play button from shared view
@@ -284,6 +306,7 @@ function App() {
             onOpenDailyChallenge={handleOpenDailyChallenge}
             onOpenStoryMode={handleOpenStoryMode}
             onOpenDailyRewards={handleOpenDailyRewards}
+            onOpenStats={handleOpenStats}
           />
         )
 
@@ -397,6 +420,11 @@ function App() {
             onBack={handleBackToHome}
             onCoinsEarned={addCoins}
           />
+        )
+
+      case PAGE_STATS:
+        return (
+          <Stats onBack={handleBackToHome} />
         )
 
       default:
