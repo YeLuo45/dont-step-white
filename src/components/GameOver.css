@@ -111,12 +111,15 @@
 .restart-btn, .home-btn, .share-btn {
   width: 100%;
   padding: 12px 24px;
+  min-height: 48px;
   border-radius: 25px;
   border: none;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .restart-btn {
@@ -191,12 +194,15 @@
 .shortcut-btn {
   flex: 1;
   padding: 10px 16px;
+  min-height: 48px;
   border-radius: 20px;
   border: none;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .shop-btn {

@@ -8,6 +8,18 @@ import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME
 import './Game.css'
 
 export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
+  // Landscape detection for portrait-only mode
+  const [isLandscape, setIsLandscape] = useState(false)
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsLandscape(window.matchMedia('(orientation: landscape)').matches)
+    }
+    checkOrientation()
+    const mq = window.matchMedia('(orientation: landscape)')
+    mq.addEventListener('change', checkOrientation)
+    return () => mq.removeEventListener('change', checkOrientation)
+  }, [])
   const level = mode === 'endless' ? null : LEVELS.find(l => l.id === mode)
 
   // Level-specific configurations
@@ -143,7 +155,17 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
   }
 
   return (
-    <div className="game" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <>
+      {isLandscape && (
+        <div className="landscape-overlay">
+          <div className="landscape-message">
+            <div className="rotate-icon">📱</div>
+            <p>请旋转设备至竖屏</p>
+            <p className="rotate-hint">本游戏仅支持竖屏模式</p>
+          </div>
+        </div>
+      )}
+      <div className="game" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* V2: Top bar with score+combo on left, lives on right */}
       <div className="top-bar">
         <ScoreBoard score={score} combo={combo} />
@@ -217,5 +239,6 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
         />
       )}
     </div>
+    </>
   )
 }

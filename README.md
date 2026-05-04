@@ -4,6 +4,33 @@
 
 **访问地址**: https://yeluo45.github.io/dont-step-white/
 
+## V5 移动端适配
+
+### 📱 安全区域适配
+- iPhone 刘海屏/灵动岛区域正常显示（`env(safe-area-inset-*)`）
+- Android 底部导航栏区域不被遮挡
+- `viewport-fit=cover` 确保全屏体验
+
+### 🚫 防止意外缩放
+- 双击不会触发缩放（`user-scalable=no`）
+- 触控操作无300ms延迟（`touch-action: manipulation`）
+- 所有按钮添加 `-webkit-tap-highlight-color: transparent`
+
+### 📐 横屏锁定
+- 仅支持竖屏模式
+- 横屏时显示旋转提示（动画：手机旋转图标）
+- 使用 `matchMedia('(orientation: landscape)')` 检测
+
+### 🍎 PWA 安装优化
+- 支持 iOS「添加到主屏幕」
+- manifest.json 配置 `apple-mobile-web-app-capable` 和 `apple-mobile-web-app-status-bar-style`
+- Apple Touch Icon 配置
+
+### 🎮 触控优化
+- 控制区按钮尺寸 ≥ 48px（符合 Apple HIG）
+- 所有交互按钮添加 `touch-action: manipulation`
+- 底部触控区适配安全区域
+
 ## V4 新功能
 
 ### 🏆 分享式排行榜
