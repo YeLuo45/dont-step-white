@@ -9,6 +9,7 @@ import { Editor, CustomLevelsList } from './components/Editor'
 import { Achievements } from './components/Achievements'
 import { AchievementToastQueue } from './components/AchievementToast'
 import { DailyChallenge } from './components/DailyChallenge'
+import { StoryMode } from './components/StoryMode'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { useAchievements } from './hooks/useAchievements'
@@ -25,6 +26,7 @@ const PAGE_EDITOR = 'editor'
 const PAGE_CUSTOM_LEVELS = 'custom-levels'
 const PAGE_ACHIEVEMENTS = 'achievements'
 const PAGE_DAILY_CHALLENGE = 'daily-challenge'
+const PAGE_STORY = 'story'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -167,6 +169,11 @@ function App() {
     setCurrentPage(PAGE_DAILY_CHALLENGE)
   }, [])
 
+  // Navigate to story mode
+  const handleOpenStoryMode = useCallback(() => {
+    setCurrentPage(PAGE_STORY)
+  }, [])
+
   // Handle play button from shared view
   const handlePlayFromShared = useCallback(() => {
     // Clear URL parameters
@@ -251,6 +258,7 @@ function App() {
             onOpenEditor={handleOpenEditor}
             onOpenAchievements={handleOpenAchievements}
             onOpenDailyChallenge={handleOpenDailyChallenge}
+            onOpenStoryMode={handleOpenStoryMode}
           />
         )
 
@@ -346,6 +354,14 @@ function App() {
             coins={coins}
             onUpdateCoins={addCoins}
             onBack={handleBackToHome}
+          />
+        )
+
+      case PAGE_STORY:
+        return (
+          <StoryMode
+            onBack={handleBackToHome}
+            onCoinsEarned={addCoins}
           />
         )
 
