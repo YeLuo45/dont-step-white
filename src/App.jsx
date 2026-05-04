@@ -8,6 +8,7 @@ import { Leaderboard } from './components/Leaderboard'
 import { Editor, CustomLevelsList } from './components/Editor'
 import { Achievements } from './components/Achievements'
 import { AchievementToastQueue } from './components/AchievementToast'
+import { DailyChallenge } from './components/DailyChallenge'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { useAchievements } from './hooks/useAchievements'
@@ -23,6 +24,7 @@ const PAGE_LEADERBOARD = 'leaderboard'
 const PAGE_EDITOR = 'editor'
 const PAGE_CUSTOM_LEVELS = 'custom-levels'
 const PAGE_ACHIEVEMENTS = 'achievements'
+const PAGE_DAILY_CHALLENGE = 'daily-challenge'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -160,6 +162,11 @@ function App() {
     setCurrentPage(PAGE_LEADERBOARD)
   }, [])
 
+  // Navigate to daily challenge
+  const handleOpenDailyChallenge = useCallback(() => {
+    setCurrentPage(PAGE_DAILY_CHALLENGE)
+  }, [])
+
   // Handle play button from shared view
   const handlePlayFromShared = useCallback(() => {
     // Clear URL parameters
@@ -243,6 +250,7 @@ function App() {
             onStartTimedMode={handleStartTimedMode}
             onOpenEditor={handleOpenEditor}
             onOpenAchievements={handleOpenAchievements}
+            onOpenDailyChallenge={handleOpenDailyChallenge}
           />
         )
 
@@ -328,6 +336,15 @@ function App() {
             stats={stats}
             titles={titles}
             totalCoinsEarned={totalCoinsEarned}
+            onBack={handleBackToHome}
+          />
+        )
+
+      case PAGE_DAILY_CHALLENGE:
+        return (
+          <DailyChallenge
+            coins={coins}
+            onUpdateCoins={addCoins}
             onBack={handleBackToHome}
           />
         )
