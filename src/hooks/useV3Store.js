@@ -1,25 +1,23 @@
 import { useCallback, useEffect } from 'react'
 import { useStorage } from './useStorage'
-import { STORAGE_COINS, STORAGE_EQUIPPED, STORAGE_OWNED, STORAGE_PROGRESS, COINS_DAILY_FIRST, COINS_STREAK_BONUS, COINS_STREAK_THRESHOLD, SKINS, LEVELS } from '../utils/constants'
+import { STORAGE_COINS, STORAGE_EQUIPPED, STORAGE_OWNED, STORAGE_PROGRESS, COINS_DAILY_FIRST, COINS_STREAK_BONUS, COINS_STREAK_THRESHOLD, SKINS, LEVELS, EXTENDED_SKINS, applySkinCSS } from '../utils/constants'
 
 const getTodayStr = () => new Date().toISOString().split('T')[0]
 
 export function useV3Store() {
   const [coinsData, setCoinsData] = useStorage(STORAGE_COINS, { coins: 0, lastDaily: null, streakDays: 0 })
-  const [equippedSkin, setEquippedSkin] = useStorage(STORAGE_EQUIPPED, { skin: 'default' })
-  const [ownedSkins, setOwnedSkins] = useStorage(STORAGE_OWNED, ['default'])
+  const [equippedSkin, setEquippedSkin] = useStorage(STORAGE_EQUIPPED, { skin: 'classic' })
+  const [ownedSkins, setOwnedSkins] = useStorage(STORAGE_OWNED, ['classic'])
   const [progress, setProgress] = useStorage(STORAGE_PROGRESS, {
     unlockedLevels: ['time60'],
     bestScores: {},
     bestStars: {}
   })
 
-  // Apply skin theme on mount
+  // Apply skin theme on mount (V11: 使用扩展皮肤系统)
   useEffect(() => {
-    const skinData = SKINS[equippedSkin.skin] || SKINS.default
-    document.documentElement.style.setProperty('--skin-bg', skinData.bg)
-    document.documentElement.style.setProperty('--skin-accent', skinData.accent)
-    document.body.style.background = skinData.bg
+    const skinData = EXTENDED_SKINS[equippedSkin.skin] || EXTENDED_SKINS.classic
+    applySkinCSS(equippedSkin.skin)
   }, [equippedSkin])
 
   // Daily bonus check
@@ -60,7 +58,7 @@ export function useV3Store() {
   }, [coinsData.coins, setCoinsData])
 
   const buySkin = useCallback((skinId) => {
-    const skin = SKINS[skinId]
+    const skin = EXTENDED_SKINS[skinId]
     if (!skin || ownedSkins.includes(skinId) || skin.price === 0) return false
     if (spendCoins(skin.price)) {
       setOwnedSkins(prev => [...prev, skinId])
@@ -72,10 +70,7 @@ export function useV3Store() {
   const equipSkin = useCallback((skinId) => {
     if (ownedSkins.includes(skinId)) {
       setEquippedSkin({ skin: skinId })
-      const skinData = SKINS[skinId] || SKINS.default
-      document.documentElement.style.setProperty('--skin-bg', skinData.bg)
-      document.documentElement.style.setProperty('--skin-accent', skinData.accent)
-      document.body.style.background = skinData.bg
+      applySkinCSS(skinId)
       return true
     }
     return false
@@ -136,18 +131,15 @@ export function useV3Store() {
 
   const clearAllData = useCallback(() => {
     setCoinsData({ coins: 0, lastDaily: null, streakDays: 0 })
-    setEquippedSkin({ skin: 'default' })
-    setOwnedSkins(['default'])
+    setEquippedSkin({ skin: 'classic' })
+    setOwnedSkins(['classic'])
     setProgress({
       unlockedLevels: ['time60'],
       bestScores: {},
       bestStars: {}
     })
     // Reset to default skin
-    const skinData = SKINS.default
-    document.documentElement.style.setProperty('--skin-bg', skinData.bg)
-    document.documentElement.style.setProperty('--skin-accent', skinData.accent)
-    document.body.style.background = skinData.bg
+    applySkinCSS('classic')
   }, [setCoinsData, setEquippedSkin, setOwnedSkins, setProgress])
 
   return {

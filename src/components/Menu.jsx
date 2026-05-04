@@ -29,7 +29,7 @@ export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSetti
       <button className="menu-btn primary" onClick={() => handleClick(onStartGame)}>开始游戏</button>
       <button className="menu-btn timed" onClick={() => handleClick(onStartTimedMode)}>⏱️ 限时挑战</button>
       <button className="menu-btn daily" onClick={() => handleClick(onOpenDailyChallenge)}>📅 每日挑战</button>
-      <button className="menu-btn" onClick={() => handleClick(onOpenShop)}>🛒 皮肤商店</button>
+      <button className="menu-btn" onClick={() => handleClick(onOpenShop)}>🎨 皮肤商店</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenLevels)}>⭐ 关卡挑战</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenEditor)}>🎨 关卡编辑</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenAchievements)}>🏆 成就</button>

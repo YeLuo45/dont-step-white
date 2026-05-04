@@ -54,13 +54,16 @@ export const COINS_DAILY_FIRST = 30
 export const COINS_STREAK_BONUS = 50
 export const COINS_STREAK_THRESHOLD = 3
 
-// V3: 皮肤商店
+// V3: 皮肤商店 (向后兼容，简化为block类)
 export const SKINS = {
   default: { id: 'default', name: '经典', price: 0, bg: '#1a1a2e', accent: '#64c8ff' },
   neon: { id: 'neon', name: '霓虹', price: 100, bg: '#0a0a1a', accent: '#ff00ff' },
   minimal: { id: 'minimal', name: '简约', price: 80, bg: '#f5f5f5', accent: '#333333' },
   cyber: { id: 'cyber', name: '赛博', price: 150, bg: '#001122', accent: '#00ffff' }
 }
+
+// V11: 扩展皮肤系统 (完整10种皮肤)
+export { SKINS as EXTENDED_SKINS, SKIN_TYPES, SKIN_RARITIES, RARITY_COLORS, RARITY_NAMES, SKIN_TABS, applySkinCSS } from './skins'
 
 // V3: 关卡定义
 export const LEVELS = [
