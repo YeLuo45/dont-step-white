@@ -1,0 +1,148 @@
+.shop {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.back-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.shop-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  flex: 1;
+}
+
+.shop-coins {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.shop-coins .coins-icon {
+  font-size: 18px;
+}
+
+.shop-coins .coins-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffd700;
+  font-family: 'Courier New', monospace;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.skin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.skin-card.equipped {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.skin-card.locked {
+  opacity: 0.6;
+}
+
+.skin-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.skin-sample {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+
+.skin-info {
+  text-align: center;
+}
+
+.skin-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.skin-price {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.skin-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(90deg, #4a9eff, #2a7edf);
+  color: #fff;
+}
+
+.skin-btn.equipped {
+  background: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+  cursor: default;
+}
+
+.skin-btn.disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.skin-btn:not(.equipped):not(.disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}

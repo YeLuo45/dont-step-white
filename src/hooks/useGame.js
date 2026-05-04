@@ -53,14 +53,14 @@ function checkFullWhiteRow(grid) {
   return grid[ROWS - 1].every(cell => cell === CELL_WHITE)
 }
 
-export function useGame() {
+export function useGame(levelConfig = null) {
   const [grid, setGrid] = useState(() => createInitialGrid())
   const [pointerCol, setPointerCol] = useState(1)
   const [score, setScore] = useState(0)
   const [bestData, setBestData] = useStorage(STORAGE_BEST, { nickname: '', score: 0 })
   const [gameState, setGameState] = useState(GAME_STATE_IDLE)
   const [speed, setSpeed] = useState(INITIAL_SPEED)
-  const [lives, setLives] = useState(INITIAL_LIVES)
+  const [lives, setLives] = useState(() => levelConfig?.lives || INITIAL_LIVES)
   const [combo, setCombo] = useState(0)
   const [currentPowerup, setCurrentPowerup] = useState(null)
 
@@ -79,6 +79,7 @@ export function useGame() {
   const currentPowerupRef = useRef(currentPowerup)
   const doubleCountRef2 = useRef(0)
   const isFrozenRef = useRef(false)
+  const levelConfigRef = useRef(levelConfig)
 
   // Sync refs
   gameStateRef.current = gameState
@@ -89,15 +90,19 @@ export function useGame() {
   comboRef.current = combo
   currentPowerupRef.current = currentPowerup
   doubleCountRef.current = doubleCountRef2.current
+  levelConfigRef.current = levelConfig
 
   const calculateSpeed = useCallback((currentScore) => {
     const level = Math.floor(currentScore / SPEED_INCREASE_INTERVAL)
-    const newSpeed = INITIAL_SPEED * Math.pow(SPEED_INCREASE_RATE, level)
-    return Math.max(newSpeed, MIN_SPEED)
+    const baseSpeed = INITIAL_SPEED * Math.pow(SPEED_INCREASE_RATE, level)
+    const speedMultiplier = levelConfigRef.current?.speedMultiplier || 1
+    const finalSpeed = baseSpeed * speedMultiplier
+    return Math.max(finalSpeed, MIN_SPEED * speedMultiplier)
   }, [])
 
   // V2: 尝试掉落道具
   const tryDropPowerup = useCallback((currentScore) => {
+    if (levelConfigRef.current?.noPowerups) return
     if (currentPowerupRef.current) return // 已有道具不掉落
     if (currentScore > 0 && currentScore % 10 === 0) {
       if (Math.random() < POWERUP_DROP_CHANCE) {
@@ -135,8 +140,8 @@ export function useGame() {
     setGrid(createInitialGrid())
     setPointerCol(1)
     setScore(0)
-    setSpeed(INITIAL_SPEED)
-    setLives(INITIAL_LIVES)
+    setSpeed(INITIAL_SPEED * (levelConfigRef.current?.speedMultiplier || 1))
+    setLives(levelConfigRef.current?.lives || INITIAL_LIVES)
     setCombo(0)
     setCurrentPowerup(null)
     setGameState(GAME_STATE_PLAYING)
@@ -170,6 +175,10 @@ export function useGame() {
     }
     playFail()
   }, [setBestData, playFail])
+
+  const forceLives = useCallback((newLives) => {
+    setLives(newLives)
+  }, [])
 
   const stepOn = useCallback(() => {
     if (gameStateRef.current !== GAME_STATE_PLAYING) return
@@ -312,6 +321,6 @@ export function useGame() {
   return {
     grid, pointerCol, score, bestData, gameState,
     startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight,
-    lives, combo, currentPowerup, usePowerup
+    lives, combo, currentPowerup, usePowerup, endGame, forceLives
   }
 }

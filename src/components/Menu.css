@@ -1,0 +1,99 @@
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.coins-display {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.coins-display:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.coins-icon {
+  font-size: 20px;
+}
+
+.coins-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffd700;
+  font-family: 'Courier New', monospace;
+}
+
+.menu-title {
+  font-size: 48px;
+  font-weight: bold;
+  background: linear-gradient(135deg, var(--skin-accent, #64c8ff), #ff6b9d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 30px;
+}
+
+.menu-desc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.menu-btn {
+  width: 100%;
+  max-width: 260px;
+  padding: 14px 24px;
+  border-radius: 25px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-btn.primary {
+  background: linear-gradient(90deg, #4a9eff, #2a7edf);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(74, 158, 255, 0.3);
+  border: none;
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+}
+
+.menu-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+}
+
+.menu-btn:not(.primary):hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.menu-hint {
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  line-height: 1.8;
+}

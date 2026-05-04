@@ -160,3 +160,55 @@
   color: rgba(255, 255, 255, 0.7);
   word-break: break-all;
 }
+
+.coins-earned {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.coins-earned-icon {
+  font-size: 24px;
+}
+
+.coins-earned span:last-child {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.game-over-shortcuts {
+  display: flex;
+  gap: 10px;
+}
+
+.shortcut-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shop-btn {
+  background: linear-gradient(90deg, #ff6b9d, #ff4757);
+  color: #fff;
+}
+
+.levels-btn {
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  color: #fff;
+}
+
+.shortcut-btn:hover {
+  transform: translateY(-2px);
+}

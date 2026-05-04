@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './GameOver.css'
 
-export function GameOver({ score, bestData, isNewHighScore, onRestart }) {
+export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels }) {
   const [nickname, setNickname] = useState('')
   const [showShare, setShowShare] = useState(false)
 
@@ -17,7 +17,7 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart }) {
   }
 
   const handleShare = async () => {
-    const text = `别踩白块 V2 - 我得到了 ${score} 分！🏆`
+    const text = `别踩白块 V3 - 我得到了 ${score} 分！🏆`
     if (navigator.share) {
       try {
         await navigator.share({ title: '别踩白块', text })
@@ -63,16 +63,28 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart }) {
           </div>
         </div>
 
+        {/* V3: Coins earned display */}
+        {earnedCoins > 0 && (
+          <div className="coins-earned">
+            <span className="coins-earned-icon">🪙</span>
+            <span>+{earnedCoins}</span>
+          </div>
+        )}
+
         {/* 3 buttons */}
         <div className="game-over-buttons">
           <button className="restart-btn" onClick={onRestart}>重新开始</button>
+          <div className="game-over-shortcuts">
+            <button className="shortcut-btn shop-btn" onClick={onGoShop}>商店</button>
+            <button className="shortcut-btn levels-btn" onClick={onGoLevels}>关卡</button>
+          </div>
           <button className="home-btn" onClick={handleHome}>返回主页</button>
           <button className="share-btn" onClick={handleShare}>分享</button>
         </div>
 
         {showShare && (
           <div className="share-text">
-            分享得分：别踩白块 V2 - {score} 分！
+            分享得分：别踩白块 V3 - {score} 分！
           </div>
         )}
       </div>
