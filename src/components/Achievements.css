@@ -292,3 +292,21 @@
   color: #1a1a2e;
   font-weight: bold;
 }
+
+.share-poster-btn {
+  background: linear-gradient(90deg, #a855f7, #9333ea);
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+  transition: all 0.2s ease;
+}
+
+.share-poster-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}

@@ -201,7 +201,7 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
   // Handle game over callback
   useEffect(() => {
     if (isGameOver) {
-      onGameOver(score, isEndless)
+      onGameOver(score, isEndless, { combo, isTimedMode })
 
       // V9: Process achievements
       const isLevelMode = !isEndless && !isTimedMode && !isCustomMode && selectedLevel

@@ -1,0 +1,487 @@
+.daily-rewards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+}
+
+.dr-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.dr-header .back-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dr-header .back-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dr-title {
+  font-size: 28px;
+  margin: 30px 0 8px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dr-date {
+  color: #888;
+  font-size: 14px;
+}
+
+/* Tab切换 */
+.dr-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+
+.dr-tab {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dr-tab.active {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+}
+
+.dr-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 签到区域 */
+.dr-sign-section {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dr-sign-card {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.dr-streak-info,
+.dr-today-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dr-streak-label,
+.dr-reward-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.dr-streak-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.dr-reward-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.dr-sign-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+  color: #1a1a2e;
+}
+
+.dr-sign-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+}
+
+.dr-sign-btn.signed {
+  background: rgba(255, 255, 255, 0.1);
+  color: #888;
+  cursor: default;
+}
+
+.dr-sign-btn.signed:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* 签到日历 */
+.dr-calendar {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.dr-calendar-title {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.dr-calendar-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dr-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dr-day-name {
+  font-size: 11px;
+  color: #666;
+}
+
+.dr-calendar-day.today .dr-day-name {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.dr-day-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #888;
+}
+
+.dr-calendar-day.signed .dr-day-circle {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border-color: #4caf50;
+  color: #fff;
+}
+
+.dr-calendar-day.today .dr-day-circle {
+  border-color: #ffd700;
+}
+
+.dr-day-reward {
+  font-size: 10px;
+  color: #666;
+}
+
+.dr-calendar-day.signed .dr-day-reward {
+  color: #4caf50;
+}
+
+/* 签到奖励表 */
+.dr-reward-table {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.dr-table-title {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.dr-table-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.dr-table-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.dr-table-item.achieved {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.dr-table-day {
+  color: #666;
+  font-size: 10px;
+}
+
+.dr-table-reward {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+/* 任务区域 */
+.dr-tasks-section {
+  width: 100%;
+  max-width: 320px;
+}
+
+.dr-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dr-task-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.dr-task-card.completed:not(.claimed) {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.dr-task-card.claimed {
+  opacity: 0.6;
+}
+
+.dr-task-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 215, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #ffd700;
+  flex-shrink: 0;
+}
+
+.dr-task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dr-task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.dr-task-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.dr-task-reward {
+  font-size: 12px;
+  color: #ffd700;
+}
+
+.dr-task-desc {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.dr-task-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dr-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dr-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700 0%, #ffaa00 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.dr-progress-text {
+  font-size: 11px;
+  color: #666;
+  min-width: 32px;
+  text-align: right;
+}
+
+.dr-claim-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.dr-claim-btn.available {
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+  color: #1a1a2e;
+  font-weight: bold;
+}
+
+.dr-claim-btn.available:hover {
+  transform: scale(1.1);
+}
+
+.dr-claim-btn.claiming {
+  animation: pulse 0.5s infinite;
+}
+
+.dr-claim-btn:disabled {
+  cursor: default;
+}
+
+/* 奖励动画 */
+.dr-reward-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.dr-reward-popup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: popIn 0.3s ease;
+}
+
+.dr-reward-icon {
+  font-size: 80px;
+  animation: bounce 0.5s ease infinite;
+}
+
+.dr-reward-amount {
+  font-size: 48px;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  margin-top: 10px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 响应式 */
+@media (max-width: 360px) {
+  .dr-table-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.share-poster-btn {
+  background: linear-gradient(90deg, #a855f7, #9333ea);
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+  transition: all 0.2s ease;
+}
+
+.share-poster-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}

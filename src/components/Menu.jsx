@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useAudio } from '../hooks/useAudio'
 import './Menu.css'
 
-export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode, onOpenEditor, onOpenAchievements, onOpenDailyChallenge, onOpenStoryMode }) {
+export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode, onOpenEditor, onOpenAchievements, onOpenDailyChallenge, onOpenStoryMode, onOpenDailyRewards }) {
   const { playClick, startBGM, getSettings } = useAudio()
 
   // V7: Start BGM when menu mounts
@@ -29,6 +29,7 @@ export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSetti
       <button className="menu-btn primary" onClick={() => handleClick(onStartGame)}>开始游戏</button>
       <button className="menu-btn timed" onClick={() => handleClick(onStartTimedMode)}>⏱️ 限时挑战</button>
       <button className="menu-btn daily" onClick={() => handleClick(onOpenDailyChallenge)}>📅 每日挑战</button>
+      <button className="menu-btn daily-rewards" onClick={() => handleClick(onOpenDailyRewards)}>🎁 每日奖励</button>
       <button className="menu-btn story" onClick={() => handleClick(onOpenStoryMode)}>📖 剧情模式</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenShop)}>🎨 皮肤商店</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenLevels)}>⭐ 关卡挑战</button>

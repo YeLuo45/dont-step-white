@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useV4Leaderboard, encodeShareData, formatShareDate, isShareExpired } from '../hooks/useV4Leaderboard'
 import { useAudio } from '../hooks/useAudio'
+import { SharePoster } from './SharePoster'
 import './GameOver.css'
 
 export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin, isTimedMode = false, titles = [], achievementsUnlocked = [] }) {
   const [nickname, setNickname] = useState('')
   const [showShare, setShowShare] = useState(false)
+  const [showPoster, setShowPoster] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [toast, setToast] = useState(null)
 
@@ -213,6 +215,7 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
           </div>
           <button className="home-btn" onClick={handleHome}>返回主页</button>
           <button className="share-btn" onClick={handleShare}>分享</button>
+          <button className="poster-btn" onClick={() => setShowPoster(true)}>🖼️ 海报</button>
         </div>
 
         {showShare && shareUrl && (
@@ -225,6 +228,20 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
       </div>
 
       {toast && <div className="share-toast">{toast}</div>}
+
+      {showPoster && (
+        <SharePoster
+          nickname={nickname}
+          score={score}
+          bestScore={bestData?.score || 0}
+          skinId={equippedSkin || 'classic'}
+          mode={isTimedMode ? 'timed' : 'endless'}
+          titles={titles}
+          achievementsUnlocked={achievementsUnlocked}
+          onNicknameChange={setNickname}
+          onClose={() => setShowPoster(false)}
+        />
+      )}
     </div>
   )
 }

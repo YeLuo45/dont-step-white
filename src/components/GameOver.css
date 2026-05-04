@@ -154,6 +154,17 @@
   box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
 }
 
+.poster-btn {
+  background: linear-gradient(90deg, #a855f7, #9333ea);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+}
+
+.poster-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+}
+
 .share-text {
   margin-top: 12px;
   padding: 10px;

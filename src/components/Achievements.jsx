@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from 'react'
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from '../utils/achievements'
+import { SharePoster } from './SharePoster'
 import './Achievements.css'
 
 export function Achievements({ unlockedMap, stats, titles, totalCoinsEarned, onBack }) {
   const [activeCategory, setActiveCategory] = useState('all')
+  const [showPoster, setShowPoster] = useState(false)
 
   // 计算解锁进度
   const getProgress = () => {
@@ -92,6 +94,7 @@ export function Achievements({ unlockedMap, stats, titles, totalCoinsEarned, onB
           <span className="coins-icon">🪙</span>
           <span className="coins-value">{totalCoinsEarned}</span>
         </div>
+        <button className="share-poster-btn" onClick={() => setShowPoster(true)}>🖼️ 分享</button>
       </div>
 
       {/* 总体进度 */}
@@ -203,6 +206,19 @@ export function Achievements({ unlockedMap, stats, titles, totalCoinsEarned, onB
           )
         })}
       </div>
+
+      {showPoster && (
+        <SharePoster
+          nickname="玩家"
+          score={stats.maxScore}
+          bestScore={stats.maxScore}
+          skinId="classic"
+          mode="endless"
+          titles={titles}
+          achievementsUnlocked={ACHIEVEMENTS.filter(a => unlockedMap[a.id]).slice(0, 5)}
+          onClose={() => setShowPoster(false)}
+        />
+      )}
     </div>
   )
 }

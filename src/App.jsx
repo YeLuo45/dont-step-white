@@ -9,10 +9,12 @@ import { Editor, CustomLevelsList } from './components/Editor'
 import { Achievements } from './components/Achievements'
 import { AchievementToastQueue } from './components/AchievementToast'
 import { DailyChallenge } from './components/DailyChallenge'
+import { DailyRewards } from './components/DailyRewards'
 import { StoryMode } from './components/StoryMode'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { useAchievements } from './hooks/useAchievements'
+import { useDailyTasks } from './hooks/useDailyTasks'
 import { LEVELS } from './utils/constants'
 import './App.css'
 
@@ -26,6 +28,7 @@ const PAGE_EDITOR = 'editor'
 const PAGE_CUSTOM_LEVELS = 'custom-levels'
 const PAGE_ACHIEVEMENTS = 'achievements'
 const PAGE_DAILY_CHALLENGE = 'daily-challenge'
+const PAGE_DAILY_REWARDS = 'daily-rewards'
 const PAGE_STORY = 'story'
 
 function App() {
@@ -67,6 +70,11 @@ function App() {
     getUnlockedAchievements,
     dismissToast,
   } = useAchievements()
+
+  // V14: Daily tasks hook
+  const {
+    onGameEnd: onDailyTaskGameEnd
+  } = useDailyTasks()
 
   // Check URL for rank parameter on mount
   useEffect(() => {
@@ -111,7 +119,7 @@ function App() {
   }, [])
 
   // Game over handler - calculate coins earned
-  const handleGameOver = useCallback((score, isEndlessMode) => {
+  const handleGameOver = useCallback((score, isEndlessMode, extraData = {}) => {
     let earned = 0
     if (isEndlessMode) {
       earned = Math.min(50, Math.floor(score / 5))
@@ -134,7 +142,18 @@ function App() {
     // V9: Process achievements
     // Note: achievements are checked in Game component, but we need to
     // update stats here for stats that Game doesn't have access to
-  }, [selectedLevel, updateLevelScore, addCoins])
+
+    // V14: Update daily tasks
+    onDailyTaskGameEnd({
+      score,
+      combo: extraData.combo || 0,
+      isTimedMode: extraData.isTimedMode || false,
+      isDailyChallenge: false,
+      isStoryMode: false,
+      levelCleared: false,
+      shared: false
+    })
+  }, [selectedLevel, updateLevelScore, addCoins, onDailyTaskGameEnd])
 
   // Restart handler
   const handleRestart = useCallback(() => {
@@ -172,6 +191,11 @@ function App() {
   // Navigate to story mode
   const handleOpenStoryMode = useCallback(() => {
     setCurrentPage(PAGE_STORY)
+  }, [])
+
+  // V14: Navigate to daily rewards
+  const handleOpenDailyRewards = useCallback(() => {
+    setCurrentPage(PAGE_DAILY_REWARDS)
   }, [])
 
   // Handle play button from shared view
@@ -259,6 +283,7 @@ function App() {
             onOpenAchievements={handleOpenAchievements}
             onOpenDailyChallenge={handleOpenDailyChallenge}
             onOpenStoryMode={handleOpenStoryMode}
+            onOpenDailyRewards={handleOpenDailyRewards}
           />
         )
 
@@ -351,6 +376,15 @@ function App() {
       case PAGE_DAILY_CHALLENGE:
         return (
           <DailyChallenge
+            coins={coins}
+            onUpdateCoins={addCoins}
+            onBack={handleBackToHome}
+          />
+        )
+
+      case PAGE_DAILY_REWARDS:
+        return (
+          <DailyRewards
             coins={coins}
             onUpdateCoins={addCoins}
             onBack={handleBackToHome}
