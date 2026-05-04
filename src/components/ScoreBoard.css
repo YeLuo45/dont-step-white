@@ -1,10 +1,10 @@
 .score-board {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 12px 24px;
+  gap: 12px;
+  padding: 8px 16px;
   background: rgba(0, 0, 0, 0.4);
-  border-radius: 30px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -12,29 +12,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .score-label {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .score-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   color: #64c8ff;
   font-family: 'Courier New', monospace;
 }
 
-.score-value.high {
-  color: #ffd700;
+.combo-display {
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #ff6b9d, #ff4757);
+  border-radius: 12px;
+  animation: comboPulse 0.5s ease;
 }
 
-.score-divider {
-  width: 1px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
+.combo-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+@keyframes comboPulse {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
 }

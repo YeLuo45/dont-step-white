@@ -6,64 +6,89 @@ import {
   SPEED_INCREASE_INTERVAL, SPEED_INCREASE_RATE,
   CELL_EMPTY, CELL_WHITE, CELL_BLACK,
   GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER,
-  STORAGE_HIGH_SCORE
+  INITIAL_LIVES, MAX_WHITE_BLOCKS_BASE, MAX_WHITE_BLOCKS_INCREMENT, MAX_WHITE_BLOCKS_INTERVAL,
+  POWERUP_SHIELD, POWERUP_FREEZE, POWERUP_DOUBLE,
+  POWERUP_DROP_CHANCE, POWERUP_FREEZE_DURATION, POWERUP_DOUBLE_COUNT,
+  STORAGE_BEST
 } from '../utils/constants'
 
-function generateRow(pointerCol) {
-  // 经典钢琴块：每行只有1个黑块，其余为白块
-  // 确保黑块不会落在 pointer 列，给予玩家反应时间
-  const availableCols = Array.from({ length: COLS }, (_, i) => i).filter(c => c !== pointerCol)
-  const blackCol = availableCols[Math.floor(Math.random() * availableCols.length)]
-  return Array(COLS).fill(null).map((_, colIdx) =>
-    colIdx === blackCol ? CELL_BLACK : CELL_WHITE
-  )
+// V2: 根据分数计算每行最大白块数
+function getMaxWhiteBlocks(score) {
+  const level = Math.floor(score / MAX_WHITE_BLOCKS_INTERVAL)
+  return Math.min(MAX_WHITE_BLOCKS_BASE + level * MAX_WHITE_BLOCKS_INCREMENT, COLS - 1)
 }
 
-function createInitialGrid(startPointerCol) {
-  // 全部留空，给玩家充足的反应时间
-  // 黑块从顶部开始下落，需要 ROWS 次 tick 才能到达底部
+// V2: 生成行 - 1个黑块 + N个白块 + 剩余空格
+function generateRow(pointerCol, maxWhiteBlocks) {
+  const availableCols = Array.from({ length: COLS }, (_, i) => i).filter(c => c !== pointerCol)
+  // 随机选择maxWhiteBlocks个位置放白块
+  const whiteIndices = []
+  const remainingCols = [...availableCols]
+  for (let i = 0; i < maxWhiteBlocks && remainingCols.length > 0; i++) {
+    const randIdx = Math.floor(Math.random() * remainingCols.length)
+    whiteIndices.push(remainingCols.splice(randIdx, 1)[0])
+  }
+  return Array(COLS).fill(null).map((_, colIdx) => {
+    if (colIdx === whiteIndices[0]) return CELL_WHITE
+    if (colIdx === availableCols[0]) return CELL_BLACK
+    return CELL_EMPTY
+  })
+}
+
+function createInitialGrid() {
   return Array(ROWS).fill(null).map(() =>
     Array(COLS).fill(CELL_EMPTY)
   )
 }
 
-function gridPushDown(grid, pointerCol) {
-  return [...grid.slice(1), generateRow(pointerCol)]
+function gridPushDown(grid, pointerCol, maxWhiteBlocks) {
+  return [...grid.slice(1), generateRow(pointerCol, maxWhiteBlocks)]
 }
 
-function checkBottomRow(grid) {
+function checkBlackBlockInBottomRow(grid) {
   return grid[ROWS - 1].some(cell => cell === CELL_BLACK)
 }
 
+function checkFullWhiteRow(grid) {
+  return grid[ROWS - 1].every(cell => cell === CELL_WHITE)
+}
+
 export function useGame() {
-  const [grid, setGrid] = useState(() => createInitialGrid(1))
+  const [grid, setGrid] = useState(() => createInitialGrid())
   const [pointerCol, setPointerCol] = useState(1)
   const [score, setScore] = useState(0)
-  const [highScore, setHighScore] = useStorage(STORAGE_HIGH_SCORE, 0)
+  const [bestData, setBestData] = useStorage(STORAGE_BEST, { nickname: '', score: 0 })
   const [gameState, setGameState] = useState(GAME_STATE_IDLE)
   const [speed, setSpeed] = useState(INITIAL_SPEED)
+  const [lives, setLives] = useState(INITIAL_LIVES)
+  const [combo, setCombo] = useState(0)
+  const [currentPowerup, setCurrentPowerup] = useState(null)
 
   const { playStep, playFail } = useAudio()
   const intervalRef = useRef(null)
+  const freezeTimerRef = useRef(null)
+  const doubleCountRef = useRef(0)
 
-  // Track if player stepped on bottom row this tick (to avoid race with interval)
-  const steppedOnBottomRef = useRef(false)
-  // Track if black block just reached bottom row this tick (gives player 1 tick to react)
-  const blockJustReachedBottomRef = useRef(false)
-
-  // Use refs to avoid stale closure in interval callback
+  // Refs to avoid stale closure
   const gameStateRef = useRef(gameState)
   const scoreRef = useRef(score)
-  const highScoreRef = useRef(highScore)
   const gridRef = useRef(grid)
   const pointerColRef = useRef(pointerCol)
+  const livesRef = useRef(lives)
+  const comboRef = useRef(combo)
+  const currentPowerupRef = useRef(currentPowerup)
+  const doubleCountRef2 = useRef(0)
+  const isFrozenRef = useRef(false)
 
-  // Keep refs in sync with state
+  // Sync refs
   gameStateRef.current = gameState
   scoreRef.current = score
-  highScoreRef.current = highScore
   gridRef.current = grid
   pointerColRef.current = pointerCol
+  livesRef.current = lives
+  comboRef.current = combo
+  currentPowerupRef.current = currentPowerup
+  doubleCountRef.current = doubleCountRef2.current
 
   const calculateSpeed = useCallback((currentScore) => {
     const level = Math.floor(currentScore / SPEED_INCREASE_INTERVAL)
@@ -71,26 +96,80 @@ export function useGame() {
     return Math.max(newSpeed, MIN_SPEED)
   }, [])
 
+  // V2: 尝试掉落道具
+  const tryDropPowerup = useCallback((currentScore) => {
+    if (currentPowerupRef.current) return // 已有道具不掉落
+    if (currentScore > 0 && currentScore % 10 === 0) {
+      if (Math.random() < POWERUP_DROP_CHANCE) {
+        const types = [POWERUP_SHIELD, POWERUP_FREEZE, POWERUP_DOUBLE]
+        const type = types[Math.floor(Math.random() * types.length)]
+        setCurrentPowerup(type)
+      }
+    }
+  }, [])
+
+  // V2: 使用道具
+  const usePowerup = useCallback(() => {
+    const powerup = currentPowerupRef.current
+    if (!powerup || gameStateRef.current !== GAME_STATE_PLAYING) return
+
+    if (powerup === POWERUP_SHIELD) {
+      setCurrentPowerup(null)
+    } else if (powerup === POWERUP_FREEZE) {
+      isFrozenRef.current = true
+      setCurrentPowerup(null)
+      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+      freezeTimerRef.current = setTimeout(() => {
+        isFrozenRef.current = false
+      }, POWERUP_FREEZE_DURATION)
+    } else if (powerup === POWERUP_DOUBLE) {
+      setCurrentPowerup(null)
+      doubleCountRef2.current = POWERUP_DOUBLE_COUNT
+    }
+  }, [])
+
   const startGame = useCallback(() => {
-    blockJustReachedBottomRef.current = false
-    steppedOnBottomRef.current = false
-    setGrid(createInitialGrid(pointerColRef.current))
+    if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+    isFrozenRef.current = false
+    doubleCountRef2.current = 0
+    setGrid(createInitialGrid())
     setPointerCol(1)
     setScore(0)
     setSpeed(INITIAL_SPEED)
+    setLives(INITIAL_LIVES)
+    setCombo(0)
+    setCurrentPowerup(null)
     setGameState(GAME_STATE_PLAYING)
   }, [])
 
   const pauseGame = useCallback(() => setGameState(GAME_STATE_PAUSED), [])
   const resumeGame = useCallback(() => setGameState(GAME_STATE_PLAYING), [])
 
+  const loseLife = useCallback(() => {
+    const newLives = livesRef.current - 1
+    setLives(newLives)
+    if (newLives <= 0) {
+      setGameState(GAME_STATE_GAME_OVER)
+      const currentScore = scoreRef.current
+      const currentBest = bestDataRef.current
+      if (currentScore > currentBest.score) {
+        setBestData({ nickname: currentBest.nickname, score: currentScore })
+      }
+    }
+  }, [setBestData])
+
+  const bestDataRef = useRef(bestData)
+  bestDataRef.current = bestData
+
   const endGame = useCallback(() => {
-    const currentScore = scoreRef.current
-    const currentHighScore = highScoreRef.current
     setGameState(GAME_STATE_GAME_OVER)
-    if (currentScore > currentHighScore) setHighScore(currentScore)
+    const currentScore = scoreRef.current
+    const currentBest = bestDataRef.current
+    if (currentScore > currentBest.score) {
+      setBestData({ nickname: currentBest.nickname, score: currentScore })
+    }
     playFail()
-  }, [setHighScore, playFail])
+  }, [setBestData, playFail])
 
   const stepOn = useCallback(() => {
     if (gameStateRef.current !== GAME_STATE_PLAYING) return
@@ -100,24 +179,56 @@ export function useGame() {
     const targetCell = currentGrid[bottomRowIdx][currentPointerCol]
 
     if (targetCell === CELL_EMPTY) return
-    else if (targetCell === CELL_WHITE) {
-      endGame()
+
+    if (targetCell === CELL_WHITE) {
+      // V2: 踩白块 - 护盾则免疫，否则-1命
+      if (currentPowerupRef.current === POWERUP_SHIELD) {
+        setCurrentPowerup(null)
+        // 清除白块但不减命
+        const newGrid = currentGrid.map((row, rowIdx) =>
+          rowIdx === bottomRowIdx
+            ? row.map((cell, colIdx) => colIdx === currentPointerCol ? CELL_EMPTY : cell)
+            : row
+        )
+        setGrid(newGrid)
+      } else {
+        // 扣除1条命，清除白块
+        const newGrid = currentGrid.map((row, rowIdx) =>
+          rowIdx === bottomRowIdx
+            ? row.map((cell, colIdx) => colIdx === currentPointerCol ? CELL_EMPTY : cell)
+            : row
+        )
+        setGrid(newGrid)
+        setCombo(0)
+        loseLife()
+      }
       return
-    } else {
-      const newGrid = currentGrid.map((row, rowIdx) =>
-        rowIdx === bottomRowIdx
-          ? row.map((cell, colIdx) => colIdx === currentPointerCol ? CELL_EMPTY : cell)
-          : row
-      )
-      setGrid(newGrid)
-      steppedOnBottomRef.current = true  // Mark that player stepped on bottom this tick
-      const newScore = scoreRef.current + 1
-      setScore(newScore)
-      setSpeed(calculateSpeed(newScore))
-      playStep()
-      if (newScore > highScoreRef.current) setHighScore(newScore)
     }
-  }, [endGame, calculateSpeed, playStep, setHighScore])
+
+    // 踩黑块
+    let earnedScore = 1
+    let newCombo = comboRef.current + 1
+    earnedScore = newCombo * 2
+
+    // V2: 双倍得分道具
+    if (doubleCountRef2.current > 0) {
+      earnedScore *= 2
+      doubleCountRef2.current--
+    }
+
+    const newGrid = currentGrid.map((row, rowIdx) =>
+      rowIdx === bottomRowIdx
+        ? row.map((cell, colIdx) => colIdx === currentPointerCol ? CELL_EMPTY : cell)
+        : row
+    )
+    setGrid(newGrid)
+    const newScore = scoreRef.current + earnedScore
+    setScore(newScore)
+    setCombo(newCombo)
+    setSpeed(calculateSpeed(newScore))
+    tryDropPowerup(newScore)
+    playStep()
+  }, [calculateSpeed, playStep, loseLife, tryDropPowerup])
 
   const moveLeft = useCallback(() => {
     if (gameStateRef.current !== GAME_STATE_PLAYING) return
@@ -129,6 +240,20 @@ export function useGame() {
     setPointerCol(prev => Math.min(COLS - 1, prev + 1))
   }, [])
 
+  // Keyboard handler for powerup (D key)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'KeyD' && gameStateRef.current === GAME_STATE_PLAYING) {
+        if (currentPowerupRef.current) {
+          e.preventDefault()
+          usePowerup()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [usePowerup])
+
   useEffect(() => {
     if (gameState !== GAME_STATE_PLAYING) {
       if (intervalRef.current) {
@@ -138,23 +263,33 @@ export function useGame() {
       return
     }
 
+    // V2: 冰冻期间不移动
+    if (isFrozenRef.current) return
+
     intervalRef.current = setInterval(() => {
-      steppedOnBottomRef.current = false  // Reset at start of each tick
       setGrid(prevGrid => {
-        // Check if player failed to step on black block that just reached bottom
-        if (!steppedOnBottomRef.current && blockJustReachedBottomRef.current) {
-          // Player didn't step on the black block that reached bottom last tick
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
-          setTimeout(() => endGame(), 0)
-          return prevGrid
+        const maxWhite = getMaxWhiteBlocks(scoreRef.current)
+        const newGrid = gridPushDown(prevGrid, pointerColRef.current, maxWhite)
+
+        // V2: 检查漏踩黑块
+        if (checkBlackBlockInBottomRow(newGrid)) {
+          // 黑块到达底部，玩家没踩，-1命且清空该行
+          const clearedGrid = newGrid.map((row, rowIdx) =>
+            rowIdx === ROWS - 1
+              ? row.map(cell => cell === CELL_BLACK ? CELL_EMPTY : cell)
+              : row
+          )
+          setCombo(0)
+          loseLife()
+          return clearedGrid
         }
-        blockJustReachedBottomRef.current = false  // Reset
-        const newGrid = gridPushDown(prevGrid, pointerColRef.current)
-        // Check if a black block just reached bottom row (player has 1 tick to react)
-        if (checkBottomRow(newGrid)) {
-          blockJustReachedBottomRef.current = true
+
+        // V2: 检查满行白块
+        if (checkFullWhiteRow(newGrid)) {
+          // 玩家必须在下一tick前清空至少一格，否则-1命
+          // 这里不直接结束，只是让行继续存在
         }
+
         return newGrid
       })
     }, speed)
@@ -165,7 +300,18 @@ export function useGame() {
         intervalRef.current = null
       }
     }
-  }, [gameState, speed, endGame])
+  }, [gameState, speed, loseLife])
 
-  return { grid, pointerCol, score, highScore, gameState, startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight }
+  // Cleanup freeze timer on unmount
+  useEffect(() => {
+    return () => {
+      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+    }
+  }, [])
+
+  return {
+    grid, pointerCol, score, bestData, gameState,
+    startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight,
+    lives, combo, currentPowerup, usePowerup
+  }
 }

@@ -8,7 +8,11 @@ import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME
 import './Game.css'
 
 export function Game() {
-  const { grid, pointerCol, score, highScore, gameState, startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight } = useGame()
+  const {
+    grid, pointerCol, score, bestData, gameState,
+    startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight,
+    lives, combo, currentPowerup, usePowerup
+  } = useGame()
 
   const isPlaying = gameState === GAME_STATE_PLAYING
   const isPaused = gameState === GAME_STATE_PAUSED
@@ -40,12 +44,13 @@ export function Game() {
     }
     switch (e.code) {
       case 'ArrowLeft': case 'KeyA': e.preventDefault(); moveLeft(); break
-      case 'ArrowRight': case 'KeyD': e.preventDefault(); moveRight(); break
+      case 'ArrowRight': e.preventDefault(); moveRight(); break
       case 'Space': case 'Enter': e.preventDefault(); stepOn(); break
       case 'KeyP': e.preventDefault(); pauseGame(); break
+      case 'KeyD': e.preventDefault(); usePowerup(); break
       default: break
     }
-  }, [isIdle, isGameOver, isPaused, startGame, resumeGame, moveLeft, moveRight, stepOn, pauseGame])
+  }, [isIdle, isGameOver, isPaused, startGame, resumeGame, moveLeft, moveRight, stepOn, pauseGame, usePowerup])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -60,9 +65,36 @@ export function Game() {
     touchStartX.current = null
   }
 
+  // V2: Powerup icons
+  const getPowerupIcon = (type) => {
+    switch (type) {
+      case 'shield': return '🛡️'
+      case 'freeze': return '❄️'
+      case 'double': return '✖️2'
+      default: return null
+    }
+  }
+
+  const isNewHighScore = score > 0 && score >= bestData.score
+
   return (
     <div className="game" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      <ScoreBoard score={score} highScore={highScore} />
+      {/* V2: Top bar with score+combo on left, lives on right */}
+      <div className="top-bar">
+        <ScoreBoard score={score} combo={combo} />
+        <div className="lives-display">
+          {Array.from({ length: 3 }, (_, i) => (
+            <span key={i} className={`heart ${i < lives ? 'heart-full' : 'heart-empty'}`}>♥</span>
+          ))}
+        </div>
+      </div>
+
+      {/* V2: Powerup display */}
+      {currentPowerup && (
+        <div className="powerup-display" onClick={usePowerup} title="点击使用道具 (D)">
+          {getPowerupIcon(currentPowerup)}
+        </div>
+      )}
 
       {isIdle && (
         <div className="start-screen">
@@ -70,7 +102,7 @@ export function Game() {
           <p className="game-desc">黑块下落，点击踩下<br />踩到白块或漏踩黑块则失败</p>
           <button className="start-btn" onClick={startGame}>开始游戏</button>
           <div className="hint">
-            <p>PC: ← → 移动 | 空格/点击 踩下</p>
+            <p>PC: ← → 移动 | 空格/点击 踩下 | D 使用道具</p>
             <p>移动: 左右滑动 | 点击 踩下</p>
           </div>
         </div>
@@ -84,7 +116,14 @@ export function Game() {
         </>
       )}
 
-      {isGameOver && <GameOver score={score} highScore={highScore} isNewHighScore={score === highScore && score > 0} onRestart={startGame} />}
+      {isGameOver && (
+        <GameOver
+          score={score}
+          bestData={bestData}
+          isNewHighScore={isNewHighScore}
+          onRestart={startGame}
+        />
+      )}
     </div>
   )
 }
