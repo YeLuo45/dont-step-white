@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useAudio } from '../hooks/useAudio'
 import './Menu.css'
 
-export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode }) {
+export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode, onOpenEditor }) {
   const { playClick, startBGM, getSettings } = useAudio()
 
   // V7: Start BGM when menu mounts
@@ -30,6 +30,7 @@ export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSetti
       <button className="menu-btn timed" onClick={() => handleClick(onStartTimedMode)}>⏱️ 限时挑战</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenShop)}>🛒 皮肤商店</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenLevels)}>⭐ 关卡挑战</button>
+      <button className="menu-btn" onClick={() => handleClick(onOpenEditor)}>🎨 关卡编辑</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenLeaderboard)}>🏆 我的战绩</button>
       <button className="menu-btn" onClick={() => handleClick(onOpenSettings)}>⚙️ 设置</button>
       <div className="menu-hint">

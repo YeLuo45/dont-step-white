@@ -8,7 +8,7 @@ import { useAudio } from '../hooks/useAudio'
 import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES } from '../utils/constants'
 import './Game.css'
 
-export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
+export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
   // Landscape detection for portrait-only mode
   const [isLandscape, setIsLandscape] = useState(false)
 
@@ -21,10 +21,13 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
     mq.addEventListener('change', checkOrientation)
     return () => mq.removeEventListener('change', checkOrientation)
   }, [])
-  const level = mode === 'endless' || mode === 'timed' ? null : LEVELS.find(l => l.id === mode)
+  const level = mode === 'endless' || mode === 'timed' || mode === 'custom' ? null : LEVELS.find(l => l.id === mode)
 
   // V6: Check if timed mode
   const isTimedMode = mode === 'timed'
+
+  // V8: Check if custom mode
+  const isCustomMode = mode === 'custom'
 
   // Level-specific configurations
   const getLevelConfig = () => {
@@ -32,6 +35,13 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       return {
         timed: true,
         noPowerups: true // V6: 限时模式禁用道具
+      }
+    }
+    if (isCustomMode && customLevelGrid) {
+      return {
+        customGridPattern: customLevelGrid,
+        noPowerups: true,
+        lives: 1
       }
     }
     if (!level) return null
@@ -253,6 +263,11 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       {isTimedMode && (
         <div className="level-badge timed-badge">
           限时挑战
+        </div>
+      )}
+      {isCustomMode && (
+        <div className="level-badge custom-badge">
+          自定义关卡
         </div>
       )}
 

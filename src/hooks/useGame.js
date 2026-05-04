@@ -48,6 +48,13 @@ function gridPushDown(grid, pointerCol, maxWhiteBlocks) {
   return [generateRow(pointerCol, maxWhiteBlocks), ...grid.slice(0, -1)]
 }
 
+// V8: Custom grid cycling - cycles through custom grid pattern
+function gridPushDownCustom(grid, customGridPattern, customGridIndexRef) {
+  const newRow = customGridPattern[customGridIndexRef.current]
+  customGridIndexRef.current = (customGridIndexRef.current + 1) % customGridPattern.length
+  return [newRow, ...grid.slice(0, -1)]
+}
+
 function checkBlackBlockInBottomRow(grid) {
   return grid[ROWS - 1].some(cell => cell === CELL_BLACK)
 }
@@ -99,6 +106,9 @@ export function useGame(levelConfig = null) {
   const levelConfigRef = useRef(levelConfig)
   const timeLeftRef = useRef(timeLeft)
   const isTimedModeRef = useRef(isTimedMode)
+  // V8: Custom grid pattern refs
+  const customGridPatternRef = useRef(levelConfig?.customGridPattern || null)
+  const customGridIndexRef = useRef(0)
 
   // Sync refs
   gameStateRef.current = gameState
@@ -172,6 +182,9 @@ export function useGame(levelConfig = null) {
     setCombo(0)
     setCurrentPowerup(null)
     setTimeLeft(TIMED_INITIAL_TIME)
+    // V8: Reset custom grid index
+    customGridIndexRef.current = 0
+    customGridPatternRef.current = levelConfigRef.current?.customGridPattern || null
     setGameState(GAME_STATE_PLAYING)
   }, [])
 
@@ -383,10 +396,18 @@ export function useGame(levelConfig = null) {
     // V2: 冰冻期间不移动
     if (isFrozenRef.current) return
 
+    const isCustomMode = customGridPatternRef.current !== null
+
     intervalRef.current = setInterval(() => {
       setGrid(prevGrid => {
-        const maxWhite = getMaxWhiteBlocks(scoreRef.current)
-        const newGrid = gridPushDown(prevGrid, pointerColRef.current, maxWhite)
+        let newGrid
+        if (isCustomMode) {
+          // V8: Custom grid cycling mode
+          newGrid = gridPushDownCustom(prevGrid, customGridPatternRef.current, customGridIndexRef)
+        } else {
+          const maxWhite = getMaxWhiteBlocks(scoreRef.current)
+          newGrid = gridPushDown(prevGrid, pointerColRef.current, maxWhite)
+        }
 
         // V6: 限时模式漏踩黑块直接结束
         if (isTimedModeRef.current) {

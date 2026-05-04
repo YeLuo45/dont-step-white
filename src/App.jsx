@@ -5,6 +5,7 @@ import { Shop } from './components/Shop'
 import { LevelSelect } from './components/LevelSelect'
 import { Settings } from './components/Settings'
 import { Leaderboard } from './components/Leaderboard'
+import { Editor, CustomLevelsList } from './components/Editor'
 import { useV3Store } from './hooks/useV3Store'
 import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { LEVELS } from './utils/constants'
@@ -16,6 +17,8 @@ const PAGE_SHOP = 'shop'
 const PAGE_LEVELS = 'levels'
 const PAGE_SETTINGS = 'settings'
 const PAGE_LEADERBOARD = 'leaderboard'
+const PAGE_EDITOR = 'editor'
+const PAGE_CUSTOM_LEVELS = 'custom-levels'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -25,6 +28,7 @@ function App() {
   const [earnedCoins, setEarnedCoins] = useState(0)
   const [pendingNavigation, setPendingNavigation] = useState(null)
   const [viewSharedData, setViewSharedData] = useState(null)
+  const [customLevelGrid, setCustomLevelGrid] = useState(null) // V8: custom level grid for editor
   const gameKeyRef = useRef(0)
 
   const { parseUrlRank } = useV4Leaderboard()
@@ -141,6 +145,62 @@ function App() {
     setSoundEnabled(prev => !prev)
   }, [])
 
+  // V8: Editor handlers
+  const handleOpenEditor = useCallback(() => {
+    setCurrentPage(PAGE_EDITOR)
+  }, [])
+
+  const handleOpenCustomLevels = useCallback(() => {
+    setCurrentPage(PAGE_CUSTOM_LEVELS)
+  }, [])
+
+  const handlePlayCustomLevel = useCallback((level) => {
+    setCustomLevelGrid(level.grid)
+    setGameMode('custom')
+    setSelectedLevel(null)
+    gameKeyRef.current += 1
+    setCurrentPage(PAGE_GAME)
+  }, [])
+
+  // Check URL for custom level on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const levelParam = params.get('level')
+    if (levelParam) {
+      try {
+        const flat = atob(levelParam)
+        const grid = []
+        for (let i = 0; i < 8; i++) {
+          grid.push(flat.slice(i * 4, (i + 1) * 4).split('').map(Number))
+        }
+        if (grid.length === 8 && grid[0].length === 4) {
+          setCustomLevelGrid(grid)
+          setGameMode('custom')
+          setSelectedLevel(null)
+          gameKeyRef.current += 1
+          setCurrentPage(PAGE_GAME)
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+      } catch (e) {
+        console.error('Failed to decode level:', e)
+      }
+    }
+  }, [])
+
+  // Listen for custom level start from session
+  useEffect(() => {
+    const handler = (e) => {
+      const level = e.detail
+      setCustomLevelGrid(level.grid)
+      setGameMode('custom')
+      setSelectedLevel(null)
+      gameKeyRef.current += 1
+      setCurrentPage(PAGE_GAME)
+    }
+    window.addEventListener('startCustomLevel', handler)
+    return () => window.removeEventListener('startCustomLevel', handler)
+  }, [])
+
   // Render based on current page
   const renderContent = () => {
     switch (currentPage) {
@@ -154,6 +214,7 @@ function App() {
             onOpenSettings={() => setCurrentPage(PAGE_SETTINGS)}
             onOpenLeaderboard={handleOpenLeaderboard}
             onStartTimedMode={handleStartTimedMode}
+            onOpenEditor={handleOpenEditor}
           />
         )
 
@@ -163,6 +224,7 @@ function App() {
             key={gameKeyRef.current}
             mode={gameMode}
             levelId={selectedLevel}
+            customLevelGrid={gameMode === 'custom' ? customLevelGrid : null}
             onGameOver={handleGameOver}
             onGoShop={handleGoShop}
             onGoLevels={handleGoLevels}
@@ -211,6 +273,23 @@ function App() {
             sharedData={viewSharedData}
             onPlay={handlePlayFromShared}
             onHome={handleBackToHome}
+          />
+        )
+
+      case PAGE_EDITOR:
+        return (
+          <Editor
+            onBack={handleBackToHome}
+            onOpenCustomLevels={handleOpenCustomLevels}
+          />
+        )
+
+      case PAGE_CUSTOM_LEVELS:
+        return (
+          <CustomLevelsList
+            onBack={handleOpenEditor}
+            onPlayLevel={handlePlayCustomLevel}
+            onGoHome={handleBackToHome}
           />
         )
 
