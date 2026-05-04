@@ -41,8 +41,9 @@ function createInitialGrid() {
   )
 }
 
+// V2: 新行从顶部添加，网格向下掉落（视觉上是从上往下掉）
 function gridPushDown(grid, pointerCol, maxWhiteBlocks) {
-  return [...grid.slice(1), generateRow(pointerCol, maxWhiteBlocks)]
+  return [generateRow(pointerCol, maxWhiteBlocks), ...grid.slice(0, -1)]
 }
 
 function checkBlackBlockInBottomRow(grid) {
