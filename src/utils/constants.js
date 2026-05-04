@@ -36,6 +36,9 @@ export const STORAGE_EQUIPPED = 'dsw_v3_equipped'
 export const STORAGE_OWNED = 'dsw_v3_owned'
 export const STORAGE_PROGRESS = 'dsw_v3_progress'
 
+// V4: 分享式排行榜
+export const STORAGE_SHARED = 'dsw_v4_shared'
+
 // V3: 金币获取
 export const COINS_DAILY_FIRST = 30
 export const COINS_STREAK_BONUS = 50

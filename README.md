@@ -4,6 +4,43 @@
 
 **访问地址**: https://yeluo45.github.io/dont-step-white/
 
+## V4 新功能
+
+### 🏆 分享式排行榜
+- **纯前端 URL 分享** — 无需后端，使用 base64 编码 URL 参数分享战绩
+- **分享格式**：`https://yeluo45.github.io/dont-step-white/?rank=<base64>`
+- **数据格式**：`{ n: nickname, s: score, sk: skin, t: timestamp }`
+
+### 📤 分享功能
+- 游戏结束后输入昵称，点击「分享」按钮
+- 支持 Web Share API（移动端）
+- 不支持时自动显示复制链接按钮
+- 每次分享后保存到 localStorage `dsw_v4_shared`
+
+### 📊 查看战绩
+- 打开分享链接自动进入「好友战绩」查看页面
+- 显示：昵称/分数/皮肤/分享日期
+- 超过30天的数据显示「已过期」
+- 底部显示自己的最高分（来自 `dsw_v2_best`）
+
+### 📜 我的战绩页面
+- 主菜单新增「我的战绩」按钮
+- 显示历史分享记录（localStorage `dsw_v4_shared`）
+- 支持重新复制分享链接
+- 自动过滤过期记录（>30天）
+
+### 💾 数据结构
+```js
+// localStorage dsw_v4_shared
+[{
+  n: "ABC",    // 昵称
+  s: 999,     // 分数
+  sk: "neon", // 皮肤
+  t: 1715000000000, // 时间戳
+  url: "https://.../?rank=..."
+}]
+```
+
 ## V3 新功能
 
 ### 🪙 金币经济系统
@@ -90,10 +127,11 @@ dont-step-white/
 │   │   ├── Cell.jsx/.css      # 单个格子（黑/白/空）
 │   │   ├── Controls.jsx/.css  # 底部控制栏（←/→/踩/暂停）
 │   │   ├── Game.jsx/.css      # 游戏主容器，键盘/触摸事件
-│   │   ├── GameOver.jsx/.css # 游戏结束画面（V2: 昵称+V3:金币+快捷）
+│   │   ├── GameOver.jsx/.css # 游戏结束画面（V2: 昵称+V3:金币+V4:分享）
 │   │   ├── Grid.jsx/.css      # 4×8 网格渲染
+│   │   ├── Leaderboard.jsx/.css # V4 分享战绩页面
 │   │   ├── LevelSelect.jsx/.css # V3 关卡选择
-│   │   ├── Menu.jsx/.css      # V3 主菜单
+│   │   ├── Menu.jsx/.css      # V3 主菜单（V4: 新增我的战绩）
 │   │   ├── ScoreBoard.jsx/.css # 分数显示（V2: 含Combo）
 │   │   ├── Settings.jsx/.css  # V3 设置页面
 │   │   └── Shop.jsx/.css      # V3 皮肤商店
@@ -101,10 +139,11 @@ dont-step-white/
 │   │   ├── useAudio.js        # Web Audio API 音效
 │   │   ├── useGame.js         # V2/V3 游戏核心逻辑
 │   │   ├── useStorage.js      # localStorage 持久化
-│   │   └── useV3Store.js      # V3 金币/皮肤/关卡进度
+│   │   ├── useV3Store.js      # V3 金币/皮肤/关卡进度
+│   │   └── useV4Leaderboard.js # V4 分享排行榜
 │   ├── utils/
-│   │   └── constants.js        # V2/V3 游戏常量
-│   ├── App.jsx                # V3 页面路由
+│   │   └── constants.js        # V2/V3/V4 游戏常量
+│   ├── App.jsx                # V3/V4 页面路由
 │   └── main.jsx
 ├── vite.config.js
 └── package.json

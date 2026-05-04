@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useV4Leaderboard, encodeShareData, formatShareDate, isShareExpired } from '../hooks/useV4Leaderboard'
 import './GameOver.css'
 
-export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels }) {
+export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin }) {
   const [nickname, setNickname] = useState('')
   const [showShare, setShowShare] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [toast, setToast] = useState(null)
+  
+  const { addSharedRecord, generateShareUrl } = useV4Leaderboard()
 
   useEffect(() => {
     if (bestData?.nickname) {
@@ -11,21 +16,84 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
     }
   }, [bestData])
 
+  // Generate share URL when nickname changes or share is clicked
+  useEffect(() => {
+    if (nickname && score > 0) {
+      const skin = equippedSkin || 'default'
+      const url = generateShareUrl(nickname, score, skin)
+      setShareUrl(url || '')
+    }
+  }, [nickname, score, equippedSkin, generateShareUrl])
+
   const handleNicknameChange = (e) => {
     const val = e.target.value.slice(0, 3)
     setNickname(val)
   }
 
+  const showToast = (message) => {
+    setToast(message)
+    setTimeout(() => setToast(null), 2000)
+  }
+
   const handleShare = async () => {
-    const text = `别踩白块 V3 - 我得到了 ${score} 分！🏆`
+    if (!nickname) {
+      showToast('请先输入昵称')
+      return
+    }
+    
+    if (!shareUrl) {
+      showToast('分享链接生成失败')
+      return
+    }
+
+    // Save to localStorage
+    const skin = equippedSkin || 'default'
+    addSharedRecord(nickname, score, skin, shareUrl)
+
+    // Try Web Share API first
     if (navigator.share) {
       try {
-        await navigator.share({ title: '别踩白块', text })
+        const shareData = {
+          title: '别踩白块 V4',
+          text: `别踩白块 V4 - ${nickname} 得到了 ${score} 分！🏆`,
+          url: shareUrl
+        }
+        await navigator.share(shareData)
+        showToast('分享成功!')
+        return
       } catch (err) {
-        setShowShare(true)
+        if (err.name !== 'AbortError') {
+          // User cancelled or error, show copy option
+          setShowShare(true)
+        }
       }
     } else {
+      // No Web Share API, show copy option
       setShowShare(true)
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      showToast('已复制分享链接!')
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = shareUrl
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        showToast('已复制分享链接!')
+      } catch (e) {
+        showToast('复制失败，请手动复制')
+      }
+      document.body.removeChild(textArea)
     }
   }
 
@@ -82,12 +150,16 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
           <button className="share-btn" onClick={handleShare}>分享</button>
         </div>
 
-        {showShare && (
+        {showShare && shareUrl && (
           <div className="share-text">
-            分享得分：别踩白块 V3 - {score} 分！
+            <div>分享链接：</div>
+            <div className="share-url">{shareUrl}</div>
+            <button className="copy-link-btn" onClick={handleCopyLink}>复制链接</button>
           </div>
         )}
       </div>
+      
+      {toast && <div className="share-toast">{toast}</div>}
     </div>
   )
 }

@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { Menu } from './components/Menu'
 import { Game } from './components/Game'
 import { Shop } from './components/Shop'
 import { LevelSelect } from './components/LevelSelect'
 import { Settings } from './components/Settings'
+import { Leaderboard } from './components/Leaderboard'
 import { useV3Store } from './hooks/useV3Store'
+import { useV4Leaderboard } from './hooks/useV4Leaderboard'
 import { LEVELS } from './utils/constants'
 import './App.css'
 
@@ -13,6 +15,7 @@ const PAGE_GAME = 'game'
 const PAGE_SHOP = 'shop'
 const PAGE_LEVELS = 'levels'
 const PAGE_SETTINGS = 'settings'
+const PAGE_LEADERBOARD = 'leaderboard'
 
 function App() {
   const [currentPage, setCurrentPage] = useState(PAGE_HOME)
@@ -21,7 +24,10 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [earnedCoins, setEarnedCoins] = useState(0)
   const [pendingNavigation, setPendingNavigation] = useState(null)
+  const [viewSharedData, setViewSharedData] = useState(null)
   const gameKeyRef = useRef(0)
+
+  const { parseUrlRank } = useV4Leaderboard()
 
   const {
     coins,
@@ -35,6 +41,15 @@ function App() {
     clearAllData,
     addCoins
   } = useV3Store()
+
+  // Check URL for rank parameter on mount
+  useEffect(() => {
+    const sharedData = parseUrlRank()
+    if (sharedData) {
+      setViewSharedData(sharedData)
+      setCurrentPage(PAGE_LEADERBOARD)
+    }
+  }, [parseUrlRank])
 
   // Handle navigation from game over
   const handleGoShop = useCallback(() => {
@@ -94,7 +109,24 @@ function App() {
     setCurrentPage(PAGE_HOME)
     setSelectedLevel(null)
     setEarnedCoins(0)
+    // Clear URL parameters when going home
+    if (window.location.search.includes('rank=')) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
+
+  // Navigate to leaderboard
+  const handleOpenLeaderboard = useCallback(() => {
+    setViewSharedData(null)
+    setCurrentPage(PAGE_LEADERBOARD)
+  }, [])
+
+  // Handle play button from shared view
+  const handlePlayFromShared = useCallback(() => {
+    // Clear URL parameters
+    window.history.replaceState({}, '', window.location.pathname)
+    handleStartGame()
+  }, [handleStartGame])
 
   // Sound toggle
   const handleSoundToggle = useCallback(() => {
@@ -112,6 +144,7 @@ function App() {
             onOpenShop={() => setCurrentPage(PAGE_SHOP)}
             onOpenLevels={() => setCurrentPage(PAGE_LEVELS)}
             onOpenSettings={() => setCurrentPage(PAGE_SETTINGS)}
+            onOpenLeaderboard={handleOpenLeaderboard}
           />
         )
 
@@ -127,6 +160,7 @@ function App() {
             onHome={handleBackToHome}
             earnedCoins={earnedCoins}
             soundEnabled={soundEnabled}
+            equippedSkin={equippedSkin}
           />
         )
 
@@ -158,6 +192,16 @@ function App() {
             onSoundToggle={handleSoundToggle}
             onClearData={clearAllData}
             onBack={handleBackToHome}
+          />
+        )
+
+      case PAGE_LEADERBOARD:
+        return (
+          <Leaderboard
+            mode={viewSharedData ? 'view-shared' : 'my-records'}
+            sharedData={viewSharedData}
+            onPlay={handlePlayFromShared}
+            onHome={handleBackToHome}
           />
         )
 

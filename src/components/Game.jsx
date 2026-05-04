@@ -7,7 +7,7 @@ import { useGame } from '../hooks/useGame'
 import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES } from '../utils/constants'
 import './Game.css'
 
-export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled }) {
+export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
   const level = mode === 'endless' ? null : LEVELS.find(l => l.id === mode)
 
   // Level-specific configurations
@@ -213,6 +213,7 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
           levelId={levelId}
           onGoShop={onGoShop}
           onGoLevels={onGoLevels}
+          equippedSkin={equippedSkin}
         />
       )}
     </div>
