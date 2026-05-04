@@ -9,7 +9,9 @@ import {
   INITIAL_LIVES, MAX_WHITE_BLOCKS_BASE, MAX_WHITE_BLOCKS_INCREMENT, MAX_WHITE_BLOCKS_INTERVAL,
   POWERUP_SHIELD, POWERUP_FREEZE, POWERUP_DOUBLE,
   POWERUP_DROP_CHANCE, POWERUP_FREEZE_DURATION, POWERUP_DOUBLE_COUNT,
-  STORAGE_BEST
+  STORAGE_BEST,
+  GAME_MODE_TIMED, STORAGE_BEST_TIMED, TIMED_INITIAL_TIME, TIMED_TIME_BONUS,
+  TIMED_SPEED_TIER_1, TIMED_SPEED_TIER_2, TIMED_SPEED_TIER_3, TIMED_SPEED_TIER_4
 } from '../utils/constants'
 
 // V2: 根据分数计算每行最大白块数
@@ -54,21 +56,35 @@ function checkFullWhiteRow(grid) {
   return grid[ROWS - 1].every(cell => cell === CELL_WHITE)
 }
 
+// V6: 计算限时模式速度档位
+function getTimedSpeed(score) {
+  if (score >= 50) return TIMED_SPEED_TIER_4 // 300ms
+  if (score >= 30) return TIMED_SPEED_TIER_3 // 400ms
+  if (score >= 15) return TIMED_SPEED_TIER_2 // 600ms
+  return TIMED_SPEED_TIER_1 // 800ms
+}
+
 export function useGame(levelConfig = null) {
   const [grid, setGrid] = useState(() => createInitialGrid())
   const [pointerCol, setPointerCol] = useState(1)
   const [score, setScore] = useState(0)
   const [bestData, setBestData] = useStorage(STORAGE_BEST, { nickname: '', score: 0 })
+  // V6: 限时模式专用
+  const [timedBestData, setTimedBestData] = useStorage(STORAGE_BEST_TIMED, { nickname: '', score: 0 })
   const [gameState, setGameState] = useState(GAME_STATE_IDLE)
   const [speed, setSpeed] = useState(INITIAL_SPEED)
   const [lives, setLives] = useState(() => levelConfig?.lives || INITIAL_LIVES)
   const [combo, setCombo] = useState(0)
   const [currentPowerup, setCurrentPowerup] = useState(null)
+  // V6: 限时模式状态
+  const [timeLeft, setTimeLeft] = useState(TIMED_INITIAL_TIME)
+  const [isTimedMode, setIsTimedMode] = useState(false)
 
   const { playStep, playFail } = useAudio()
   const intervalRef = useRef(null)
   const freezeTimerRef = useRef(null)
   const doubleCountRef = useRef(0)
+  const timedTimerRef = useRef(null)
 
   // Refs to avoid stale closure
   const gameStateRef = useRef(gameState)
@@ -81,6 +97,8 @@ export function useGame(levelConfig = null) {
   const doubleCountRef2 = useRef(0)
   const isFrozenRef = useRef(false)
   const levelConfigRef = useRef(levelConfig)
+  const timeLeftRef = useRef(timeLeft)
+  const isTimedModeRef = useRef(isTimedMode)
 
   // Sync refs
   gameStateRef.current = gameState
@@ -92,8 +110,14 @@ export function useGame(levelConfig = null) {
   currentPowerupRef.current = currentPowerup
   doubleCountRef.current = doubleCountRef2.current
   levelConfigRef.current = levelConfig
+  timeLeftRef.current = timeLeft
+  isTimedModeRef.current = isTimedMode
 
   const calculateSpeed = useCallback((currentScore) => {
+    // V6: 限时模式使用固定档位速度
+    if (isTimedModeRef.current) {
+      return getTimedSpeed(currentScore)
+    }
     const level = Math.floor(currentScore / SPEED_INCREASE_INTERVAL)
     const baseSpeed = INITIAL_SPEED * Math.pow(SPEED_INCREASE_RATE, level)
     const speedMultiplier = levelConfigRef.current?.speedMultiplier || 1
@@ -136,8 +160,10 @@ export function useGame(levelConfig = null) {
 
   const startGame = useCallback(() => {
     if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+    if (timedTimerRef.current) clearInterval(timedTimerRef.current)
     isFrozenRef.current = false
     doubleCountRef2.current = 0
+    setIsTimedMode(false)
     setGrid(createInitialGrid())
     setPointerCol(1)
     setScore(0)
@@ -145,6 +171,24 @@ export function useGame(levelConfig = null) {
     setLives(levelConfigRef.current?.lives || INITIAL_LIVES)
     setCombo(0)
     setCurrentPowerup(null)
+    setTimeLeft(TIMED_INITIAL_TIME)
+    setGameState(GAME_STATE_PLAYING)
+  }, [])
+
+  // V6: 启动限时挑战模式
+  const startTimedMode = useCallback(() => {
+    if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+    if (timedTimerRef.current) clearInterval(timedTimerRef.current)
+    isFrozenRef.current = false
+    doubleCountRef2.current = 0
+    setIsTimedMode(true)
+    setGrid(createInitialGrid())
+    setPointerCol(1)
+    setScore(0)
+    setSpeed(TIMED_SPEED_TIER_1) // 800ms
+    setCombo(0)
+    setCurrentPowerup(null)
+    setTimeLeft(TIMED_INITIAL_TIME)
     setGameState(GAME_STATE_PLAYING)
   }, [])
 
@@ -167,7 +211,28 @@ export function useGame(levelConfig = null) {
   const bestDataRef = useRef(bestData)
   bestDataRef.current = bestData
 
+  // V6: 限时模式结束游戏
+  const endTimedGame = useCallback(() => {
+    setGameState(GAME_STATE_GAME_OVER)
+    const currentScore = scoreRef.current
+    const currentBest = timedBestData.current
+    if (currentScore > currentBest.score) {
+      setTimedBestData({ nickname: currentBest.nickname, score: currentScore })
+    }
+    playFail()
+  }, [setTimedBestData, playFail])
+
+  // V6: 添加时间（踩黑块+3秒）
+  const addTime = useCallback((seconds) => {
+    setTimeLeft(prev => prev + seconds)
+  }, [])
+
+  // V6: 限时模式结束游戏
   const endGame = useCallback(() => {
+    if (isTimedModeRef.current) {
+      endTimedGame()
+      return
+    }
     setGameState(GAME_STATE_GAME_OVER)
     const currentScore = scoreRef.current
     const currentBest = bestDataRef.current
@@ -175,7 +240,7 @@ export function useGame(levelConfig = null) {
       setBestData({ nickname: currentBest.nickname, score: currentScore })
     }
     playFail()
-  }, [setBestData, playFail])
+  }, [setBestData, playFail, endTimedGame])
 
   const forceLives = useCallback((newLives) => {
     setLives(newLives)
@@ -190,7 +255,12 @@ export function useGame(levelConfig = null) {
 
     if (targetCell === CELL_EMPTY) return
 
+    // V6: 限时模式踩白块立即结束
     if (targetCell === CELL_WHITE) {
+      if (isTimedModeRef.current) {
+        endTimedGame()
+        return
+      }
       // V2: 踩白块 - 护盾则免疫，否则-1命
       if (currentPowerupRef.current === POWERUP_SHIELD) {
         setCurrentPowerup(null)
@@ -220,6 +290,11 @@ export function useGame(levelConfig = null) {
     let newCombo = comboRef.current + 1
     earnedScore = newCombo * 2
 
+    // V6: 限时模式额外+3秒
+    if (isTimedModeRef.current) {
+      addTime(TIMED_TIME_BONUS)
+    }
+
     // V2: 双倍得分道具
     if (doubleCountRef2.current > 0) {
       earnedScore *= 2
@@ -238,7 +313,7 @@ export function useGame(levelConfig = null) {
     setSpeed(calculateSpeed(newScore))
     tryDropPowerup(newScore)
     playStep()
-  }, [calculateSpeed, playStep, loseLife, tryDropPowerup])
+  }, [calculateSpeed, playStep, loseLife, tryDropPowerup, addTime, endTimedGame])
 
   const moveLeft = useCallback(() => {
     if (gameStateRef.current !== GAME_STATE_PLAYING) return
@@ -254,7 +329,7 @@ export function useGame(levelConfig = null) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === 'KeyD' && gameStateRef.current === GAME_STATE_PLAYING) {
-        if (currentPowerupRef.current) {
+        if (currentPowerupRef.current && !isTimedModeRef.current) {
           e.preventDefault()
           usePowerup()
         }
@@ -263,6 +338,36 @@ export function useGame(levelConfig = null) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [usePowerup])
+
+  // V6: 限时模式计时器
+  useEffect(() => {
+    if (!isTimedMode || gameState !== GAME_STATE_PLAYING) {
+      if (timedTimerRef.current) {
+        clearInterval(timedTimerRef.current)
+        timedTimerRef.current = null
+      }
+      return
+    }
+
+    timedTimerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timedTimerRef.current)
+          timedTimerRef.current = null
+          endTimedGame()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => {
+      if (timedTimerRef.current) {
+        clearInterval(timedTimerRef.current)
+        timedTimerRef.current = null
+      }
+    }
+  }, [isTimedMode, gameState, endTimedGame])
 
   useEffect(() => {
     if (gameState !== GAME_STATE_PLAYING) {
@@ -281,17 +386,25 @@ export function useGame(levelConfig = null) {
         const maxWhite = getMaxWhiteBlocks(scoreRef.current)
         const newGrid = gridPushDown(prevGrid, pointerColRef.current, maxWhite)
 
-        // V2: 检查漏踩黑块
-        if (checkBlackBlockInBottomRow(newGrid)) {
-          // 黑块到达底部，玩家没踩，-1命且清空该行
-          const clearedGrid = newGrid.map((row, rowIdx) =>
-            rowIdx === ROWS - 1
-              ? row.map(cell => cell === CELL_BLACK ? CELL_EMPTY : cell)
-              : row
-          )
-          setCombo(0)
-          loseLife()
-          return clearedGrid
+        // V6: 限时模式漏踩黑块直接结束
+        if (isTimedModeRef.current) {
+          if (checkBlackBlockInBottomRow(newGrid)) {
+            endTimedGame()
+            return newGrid
+          }
+        } else {
+          // V2: 检查漏踩黑块
+          if (checkBlackBlockInBottomRow(newGrid)) {
+            // 黑块到达底部，玩家没踩，-1命且清空该行
+            const clearedGrid = newGrid.map((row, rowIdx) =>
+              rowIdx === ROWS - 1
+                ? row.map(cell => cell === CELL_BLACK ? CELL_EMPTY : cell)
+                : row
+            )
+            setCombo(0)
+            loseLife()
+            return clearedGrid
+          }
         }
 
         // V2: 检查满行白块
@@ -310,18 +423,21 @@ export function useGame(levelConfig = null) {
         intervalRef.current = null
       }
     }
-  }, [gameState, speed, loseLife])
+  }, [gameState, speed, loseLife, endTimedGame])
 
   // Cleanup freeze timer on unmount
   useEffect(() => {
     return () => {
       if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+      if (timedTimerRef.current) clearInterval(timedTimerRef.current)
     }
   }, [])
 
   return {
     grid, pointerCol, score, bestData, gameState,
     startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight,
-    lives, combo, currentPowerup, usePowerup, endGame, forceLives
+    lives, combo, currentPowerup, usePowerup, endGame, forceLives,
+    // V6: 限时模式导出
+    timeLeft, isTimedMode, timedBestData, startTimedMode
   }
 }

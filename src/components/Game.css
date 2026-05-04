@@ -190,3 +190,28 @@
   0%, 100% { transform: rotate(0deg); }
   50% { transform: rotate(90deg); }
 }
+
+/* V6: Timed mode styles */
+.timer-display.timed-mode {
+  background: linear-gradient(90deg, rgba(255, 200, 0, 0.2), rgba(255, 100, 0, 0.2));
+  border: 1px solid rgba(255, 200, 0, 0.4);
+}
+
+.timer-display.timed-mode .timer-value {
+  color: #ffd700;
+  font-size: 20px;
+}
+
+.speed-tier {
+  font-size: 10px;
+  color: #ff9500;
+  margin-left: 6px;
+  background: rgba(255, 150, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.timed-badge {
+  background: linear-gradient(90deg, #ff9500, #ff6b00) !important;
+  color: #fff !important;
+}

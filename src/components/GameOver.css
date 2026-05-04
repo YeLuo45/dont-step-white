@@ -280,3 +280,30 @@
 .copy-link-btn:hover {
   transform: scale(1.05);
 }
+
+/* V6: Timed mode stats */
+.timed-mode-stats {
+  margin: 12px 0;
+  padding: 10px;
+  background: rgba(255, 200, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 200, 0, 0.3);
+}
+
+.timed-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+}
+
+.timed-stat-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.timed-stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffd700;
+}

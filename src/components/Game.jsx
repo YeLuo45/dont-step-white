@@ -20,10 +20,19 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
     mq.addEventListener('change', checkOrientation)
     return () => mq.removeEventListener('change', checkOrientation)
   }, [])
-  const level = mode === 'endless' ? null : LEVELS.find(l => l.id === mode)
+  const level = mode === 'endless' || mode === 'timed' ? null : LEVELS.find(l => l.id === mode)
+
+  // V6: Check if timed mode
+  const isTimedMode = mode === 'timed'
 
   // Level-specific configurations
   const getLevelConfig = () => {
+    if (isTimedMode) {
+      return {
+        timed: true,
+        noPowerups: true // V6: 限时模式禁用道具
+      }
+    }
     if (!level) return null
     return {
       speedMultiplier: level.id === 'speed' ? 0.5 : level.id === 'slow' ? 2 : 1,
@@ -39,10 +48,12 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
   const {
     grid, pointerCol, score, bestData, gameState,
     startGame, pauseGame, resumeGame, stepOn, moveLeft, moveRight,
-    lives, combo, currentPowerup, usePowerup, endGame, forceLives
+    lives, combo, currentPowerup, usePowerup, endGame, forceLives,
+    // V6: timed mode
+    timeLeft, isTimedMode: hookIsTimedMode, timedBestData, startTimedMode
   } = useGame(levelConfig)
 
-  const [timeLeft, setTimeLeft] = useState(levelConfig?.timeLimit)
+  const [localTimeLeft, setLocalTimeLeft] = useState(levelConfig?.timeLimit)
   const timerRef = useRef(null)
 
   const isPlaying = gameState === GAME_STATE_PLAYING
@@ -52,9 +63,12 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
 
   const isEndless = !level || level.id === 'endless'
 
-  // Handle time60 timer
+  // Use hook's timeLeft for timed mode, localTimeLeft for level timeLimit
+  const displayTimeLeft = isTimedMode ? timeLeft : localTimeLeft
+
+  // Handle time60 timer (for level modes, not timed mode)
   useEffect(() => {
-    if (!levelConfig?.timeLimit || !isPlaying) {
+    if (!levelConfig?.timeLimit || !isPlaying || isTimedMode) {
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
@@ -62,10 +76,10 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       return
     }
 
-    setTimeLeft(levelConfig.timeLimit)
+    setLocalTimeLeft(levelConfig.timeLimit)
 
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setLocalTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current)
           timerRef.current = null
@@ -82,7 +96,7 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
         timerRef.current = null
       }
     }
-  }, [levelConfig?.timeLimit, isPlaying, startGame])
+  }, [levelConfig?.timeLimit, isPlaying, startGame, isTimedMode])
 
   // Handle game over callback
   useEffect(() => {
@@ -103,11 +117,11 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
 
   const handleKeyDown = useCallback((e) => {
     if (isIdle) {
-      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); startGame() }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); isTimedMode ? startTimedMode() : startGame() }
       return
     }
     if (isGameOver) {
-      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); startGame() }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); isTimedMode ? startTimedMode() : startGame() }
       return
     }
     if (isPaused) {
@@ -122,7 +136,7 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       case 'KeyD': e.preventDefault(); usePowerup(); break
       default: break
     }
-  }, [isIdle, isGameOver, isPaused, startGame, resumeGame, moveLeft, moveRight, stepOn, pauseGame, usePowerup])
+  }, [isIdle, isGameOver, isPaused, startGame, startTimedMode, isTimedMode, resumeGame, moveLeft, moveRight, stepOn, pauseGame, usePowerup])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -148,10 +162,25 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
   }
 
   const isNewHighScore = score > 0 && score >= bestData.score
+  // V6: timed mode high score
+  const isNewTimedHighScore = isTimedMode && score > 0 && score >= (timedBestData?.score || 0)
 
   // Restart handler - restart game
   const handleRestart = () => {
-    startGame()
+    if (isTimedMode) {
+      startTimedMode()
+    } else {
+      startGame()
+    }
+  }
+
+  // V6: Get current speed tier label
+  const getSpeedTierLabel = (spd) => {
+    if (spd <= 300) return 'MAX'
+    if (spd <= 400) return '4档'
+    if (spd <= 600) return '3档'
+    if (spd <= 800) return '2档'
+    return '1档'
   }
 
   return (
@@ -169,7 +198,7 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       {/* V2: Top bar with score+combo on left, lives on right */}
       <div className="top-bar">
         <ScoreBoard score={score} combo={combo} />
-        {isEndless && (
+        {isEndless && !isTimedMode && (
           <div className="lives-display">
             {Array.from({ length: 3 }, (_, i) => (
               <span key={i} className={`heart ${i < lives ? 'heart-full' : 'heart-empty'}`}>♥</span>
@@ -181,24 +210,30 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
             <span className={`heart ${lives > 0 ? 'heart-full' : 'heart-empty'}`}>♥</span>
           </div>
         )}
-        {levelConfig?.timeLimit && (
-          <div className="timer-display">
-            <span className="timer-value">{timeLeft}s</span>
+        {(levelConfig?.timeLimit || isTimedMode) && (
+          <div className={`timer-display ${isTimedMode ? 'timed-mode' : ''}`}>
+            <span className="timer-value">{displayTimeLeft}s</span>
+            {isTimedMode && <span className="speed-tier">{getSpeedTierLabel(speed)}</span>}
           </div>
         )}
       </div>
 
-      {/* V2: Powerup display - hide in pure mode */}
-      {currentPowerup && !levelConfig?.noPowerups && (
+      {/* V2: Powerup display - hide in pure mode and timed mode */}
+      {currentPowerup && !levelConfig?.noPowerups && !isTimedMode && (
         <div className="powerup-display" onClick={usePowerup} title="点击使用道具 (D)">
           {getPowerupIcon(currentPowerup)}
         </div>
       )}
 
-      {/* Level info badge */}
+      {/* Level info badge / V6 timed badge */}
       {level && (
         <div className="level-badge">
           {level.name}
+        </div>
+      )}
+      {isTimedMode && (
+        <div className="level-badge timed-badge">
+          限时挑战
         </div>
       )}
 
@@ -208,10 +243,13 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
           {level && (
             <p className="level-rule-badge">{level.rule}</p>
           )}
+          {isTimedMode && (
+            <p className="level-rule-badge">60秒 · 踩黑块+3秒 · 踩白块结束</p>
+          )}
           <p className="game-desc">黑块下落，点击踩下<br />踩到白块或漏踩黑块则失败</p>
-          <button className="start-btn" onClick={startGame}>开始游戏</button>
+          <button className="start-btn" onClick={isTimedMode ? startTimedMode : startGame}>开始游戏</button>
           <div className="hint">
-            <p>PC: ← → 移动 | 空格/点击 踩下 | D 使用道具</p>
+            <p>PC: ← → 移动 | 空格/点击 踩下</p>
             <p>移动: 左右滑动 | 点击 踩下</p>
           </div>
         </div>
@@ -228,14 +266,15 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       {isGameOver && (
         <GameOver
           score={score}
-          bestData={bestData}
-          isNewHighScore={isNewHighScore}
+          bestData={isTimedMode ? timedBestData : bestData}
+          isNewHighScore={isTimedMode ? isNewTimedHighScore : isNewHighScore}
           onRestart={handleRestart}
           earnedCoins={earnedCoins}
           levelId={levelId}
           onGoShop={onGoShop}
           onGoLevels={onGoLevels}
           equippedSkin={equippedSkin}
+          isTimedMode={isTimedMode}
         />
       )}
     </div>

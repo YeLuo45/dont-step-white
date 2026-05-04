@@ -39,6 +39,16 @@ export const STORAGE_PROGRESS = 'dsw_v3_progress'
 // V4: 分享式排行榜
 export const STORAGE_SHARED = 'dsw_v4_shared'
 
+// V6: 限时挑战模式
+export const GAME_MODE_TIMED = 'timed'
+export const STORAGE_BEST_TIMED = 'dsw_v6_best_timed'
+export const TIMED_INITIAL_TIME = 60
+export const TIMED_TIME_BONUS = 3
+export const TIMED_SPEED_TIER_1 = 800
+export const TIMED_SPEED_TIER_2 = 600
+export const TIMED_SPEED_TIER_3 = 400
+export const TIMED_SPEED_TIER_4 = 300
+
 // V3: 金币获取
 export const COINS_DAILY_FIRST = 30
 export const COINS_STREAK_BONUS = 50

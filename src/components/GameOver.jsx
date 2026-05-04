@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useV4Leaderboard, encodeShareData, formatShareDate, isShareExpired } from '../hooks/useV4Leaderboard'
 import './GameOver.css'
 
-export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin }) {
+export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin, isTimedMode = false }) {
   const [nickname, setNickname] = useState('')
   const [showShare, setShowShare] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
@@ -54,8 +54,10 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
     if (navigator.share) {
       try {
         const shareData = {
-          title: '别踩白块 V4',
-          text: `别踩白块 V4 - ${nickname} 得到了 ${score} 分！🏆`,
+          title: isTimedMode ? '别踩白块 V6 限时挑战' : '别踩白块 V4',
+          text: isTimedMode 
+            ? `别踩白块 V6 限时挑战 - ${nickname} 得到了 ${score} 分！⏱️`
+            : `别踩白块 V4 - ${nickname} 得到了 ${score} 分！🏆`,
           url: shareUrl
         }
         await navigator.share(shareData)
@@ -104,7 +106,7 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
   return (
     <div className="game-over-overlay">
       <div className="game-over-modal">
-        <h2 className="game-over-title">游戏结束</h2>
+        <h2 className="game-over-title">{isTimedMode ? '限时挑战结束' : '游戏结束'}</h2>
 
         {/* Nickname input */}
         <div className="nickname-section">
@@ -122,14 +124,26 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
 
         <div className="game-over-scores">
           <div className="score-row">
-            <span className="score-name">本局得分</span>
+            <span className="score-name">{isTimedMode ? '限时得分' : '本局得分'}</span>
             <span className="score-num">{score}</span>
           </div>
           <div className="score-row">
-            <span className="score-name">最高纪录</span>
+            <span className="score-name">{isTimedMode ? '限时纪录' : '最高纪录'}</span>
             <span className="score-num best">{bestData?.score || 0}</span>
           </div>
         </div>
+
+        {/* V6: Timed mode extra stats */}
+        {isTimedMode && (
+          <div className="timed-mode-stats">
+            <div className="timed-stat-row">
+              <span className="timed-stat-label">🏆 成绩等级</span>
+              <span className="timed-stat-value">
+                {score >= 100 ? '大师' : score >= 70 ? '钻石' : score >= 50 ? '黄金' : score >= 30 ? '白银' : '青铜'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* V3: Coins earned display */}
         {earnedCoins > 0 && (
@@ -143,8 +157,8 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
         <div className="game-over-buttons">
           <button className="restart-btn" onClick={onRestart}>重新开始</button>
           <div className="game-over-shortcuts">
-            <button className="shortcut-btn shop-btn" onClick={onGoShop}>商店</button>
-            <button className="shortcut-btn levels-btn" onClick={onGoLevels}>关卡</button>
+            {!isTimedMode && <button className="shortcut-btn shop-btn" onClick={onGoShop}>商店</button>}
+            {!isTimedMode && <button className="shortcut-btn levels-btn" onClick={onGoLevels}>关卡</button>}
           </div>
           <button className="home-btn" onClick={handleHome}>返回主页</button>
           <button className="share-btn" onClick={handleShare}>分享</button>

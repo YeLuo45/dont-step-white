@@ -1,7 +1,7 @@
 import React from 'react'
 import './Menu.css'
 
-export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard }) {
+export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSettings, onOpenLeaderboard, onStartTimedMode }) {
   return (
     <div className="menu">
       <div className="coins-display" onClick={onOpenShop}>
@@ -11,6 +11,7 @@ export function Menu({ coins, onStartGame, onOpenShop, onOpenLevels, onOpenSetti
       <h1 className="menu-title">别踩白块</h1>
       <p className="menu-desc">黑块下落，点击踩下<br />踩到白块或漏踩黑块则失败</p>
       <button className="menu-btn primary" onClick={onStartGame}>开始游戏</button>
+      <button className="menu-btn timed" onClick={onStartTimedMode}>⏱️ 限时挑战</button>
       <button className="menu-btn" onClick={onOpenShop}>🛒 皮肤商店</button>
       <button className="menu-btn" onClick={onOpenLevels}>⭐ 关卡挑战</button>
       <button className="menu-btn" onClick={onOpenLeaderboard}>🏆 我的战绩</button>

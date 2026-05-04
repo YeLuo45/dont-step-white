@@ -100,3 +100,10 @@
   font-size: 12px;
   line-height: 1.8;
 }
+
+.menu-btn.timed {
+  background: linear-gradient(90deg, #ff9500, #ff6b00);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 150, 0, 0.3);
+  border: none;
+}

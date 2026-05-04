@@ -68,6 +68,14 @@ function App() {
     setCurrentPage(PAGE_GAME)
   }, [])
 
+  // V6: Start timed challenge mode
+  const handleStartTimedMode = useCallback(() => {
+    setGameMode('timed')
+    setSelectedLevel(null)
+    gameKeyRef.current += 1
+    setCurrentPage(PAGE_GAME)
+  }, [])
+
   // Select and start a level
   const handleSelectLevel = useCallback((levelId) => {
     setSelectedLevel(levelId)
@@ -145,6 +153,7 @@ function App() {
             onOpenLevels={() => setCurrentPage(PAGE_LEVELS)}
             onOpenSettings={() => setCurrentPage(PAGE_SETTINGS)}
             onOpenLeaderboard={handleOpenLeaderboard}
+            onStartTimedMode={handleStartTimedMode}
           />
         )
 
