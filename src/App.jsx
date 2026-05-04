@@ -5,6 +5,7 @@ import { Shop } from './components/Shop'
 import { LevelSelect } from './components/LevelSelect'
 import { Settings } from './components/Settings'
 import { Leaderboard } from './components/Leaderboard'
+import { LeaderboardPro } from './components/LeaderboardPro'
 import { Editor, CustomLevelsList } from './components/Editor'
 import { Achievements } from './components/Achievements'
 import { AchievementToastQueue } from './components/AchievementToast'
@@ -360,12 +361,7 @@ function App() {
 
       case PAGE_LEADERBOARD:
         return (
-          <Leaderboard
-            mode={viewSharedData ? 'view-shared' : 'my-records'}
-            sharedData={viewSharedData}
-            onPlay={handlePlayFromShared}
-            onHome={handleBackToHome}
-          />
+          <LeaderboardPro onBack={handleBackToHome} />
         )
 
       case PAGE_EDITOR:

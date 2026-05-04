@@ -86,3 +86,37 @@ export const LEVELS = [
   { id: 'slow', name: '巨慢模式', rule: '速度×0.5', passScore: 40, unlock: 'pure' },
   { id: 'endless', name: '无限模式', rule: '无命限制', passScore: null, unlock: 'survival' }
 ]
+
+// V18: 排行榜 Pro - 预置全球玩家数据
+export const MOCK_GLOBAL_PLAYERS = [
+  { id: 1, nickname: '🏆 巅峰王者', score: 4987, date: '2026-04-28' },
+  { id: 2, nickname: '🎮 游戏达人', score: 4652, date: '2026-04-27' },
+  { id: 3, nickname: '⚡ 闪电侠', score: 4398, date: '2026-04-29' },
+  { id: 4, nickname: '🎯 神射手', score: 4103, date: '2026-04-25' },
+  { id: 5, nickname: '🔥 烈焰战神', score: 3987, date: '2026-04-26' },
+  { id: 6, nickname: '❄️ 冰霜之王', score: 3754, date: '2026-04-24' },
+  { id: 7, nickname: '🌙 暗夜骑士', score: 3621, date: '2026-04-23' },
+  { id: 8, nickname: '☀️ 光明使者', score: 3487, date: '2026-04-22' },
+  { id: 9, nickname: '🌊 海浪之声', score: 3354, date: '2026-04-21' },
+  { id: 10, nickname: '🌲 森林精灵', score: 3201, date: '2026-04-20' },
+  { id: 11, nickname: '⛰️ 山巅勇者', score: 3098, date: '2026-04-19' },
+  { id: 12, nickname: '🌈 彩虹之魂', score: 2987, date: '2026-04-18' },
+  { id: 13, nickname: '⭐ 星际旅者', score: 2854, date: '2026-04-17' },
+  { id: 14, nickname: '🎪 马戏团之星', score: 2741, date: '2026-04-16' },
+  { id: 15, nickname: '🎨 色彩大师', score: 2623, date: '2026-04-15' },
+  { id: 16, nickname: '🎭 影子戏法', score: 2514, date: '2026-04-14' },
+  { id: 17, nickname: '🎵 音律精灵', score: 2398, date: '2026-04-13' },
+  { id: 18, nickname: '🔮 预言家', score: 2287, date: '2026-04-12' },
+  { id: 19, nickname: '🗡️ 剑客', score: 2154, date: '2026-04-11' },
+  { id: 20, nickname: '🛡️ 守护者', score: 2032, date: '2026-04-10' }
+]
+
+// V18: 排行榜 Pro - localStorage Keys
+export const STORAGE_FRIENDS = 'dsw_v18_friends'
+export const STORAGE_FRIEND_CACHE = 'dsw_v18_cache'
+export const STORAGE_GLOBAL = 'dsw_v18_global'
+
+// V18: 游戏模式标识
+export const GAME_MODE_ENDLESS = 'endless'
+export const GAME_MODE_STORY = 'story'
+export const GAME_MODE_DAILY = 'daily'
