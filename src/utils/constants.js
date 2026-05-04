@@ -49,6 +49,18 @@ export const TIMED_SPEED_TIER_2 = 600
 export const TIMED_SPEED_TIER_3 = 400
 export const TIMED_SPEED_TIER_4 = 300
 
+// V13: 高级速度档位 (无尽模式 5档)
+export const ENDLESS_SPEED_TIER_1 = 1000
+export const ENDLESS_SPEED_TIER_2 = 800
+export const ENDLESS_SPEED_TIER_3 = 600
+export const ENDLESS_SPEED_TIER_4 = 400
+export const ENDLESS_SPEED_TIER_5 = 300
+
+// V13: 高级速度档位 (剧情模式 3档)
+export const STORY_SPEED_TIER_1 = 800
+export const STORY_SPEED_TIER_2 = 600
+export const STORY_SPEED_TIER_3 = 400
+
 // V3: 金币获取
 export const COINS_DAILY_FIRST = 30
 export const COINS_STREAK_BONUS = 50

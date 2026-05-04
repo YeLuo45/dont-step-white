@@ -11,8 +11,11 @@ import {
   POWERUP_DROP_CHANCE, POWERUP_FREEZE_DURATION, POWERUP_DOUBLE_COUNT,
   STORAGE_BEST,
   GAME_MODE_TIMED, STORAGE_BEST_TIMED, TIMED_INITIAL_TIME, TIMED_TIME_BONUS,
-  TIMED_SPEED_TIER_1, TIMED_SPEED_TIER_2, TIMED_SPEED_TIER_3, TIMED_SPEED_TIER_4
+  TIMED_SPEED_TIER_1, TIMED_SPEED_TIER_2, TIMED_SPEED_TIER_3, TIMED_SPEED_TIER_4,
+  ENDLESS_SPEED_TIER_1, ENDLESS_SPEED_TIER_2, ENDLESS_SPEED_TIER_3, ENDLESS_SPEED_TIER_4, ENDLESS_SPEED_TIER_5,
+  STORY_SPEED_TIER_1, STORY_SPEED_TIER_2, STORY_SPEED_TIER_3
 } from '../utils/constants'
+import { loadAdvancedSettings, getSpeedForMode } from '../utils/controlModes'
 
 // V2: 根据分数计算每行最大白块数
 function getMaxWhiteBlocks(score) {
@@ -110,6 +113,9 @@ export function useGame(levelConfig = null) {
   const customGridPatternRef = useRef(levelConfig?.customGridPattern || null)
   const customGridIndexRef = useRef(0)
 
+  // V13: Advanced settings ref for speed tiers
+  const advancedSettingsRef = useRef(loadAdvancedSettings())
+
   // Sync refs
   gameStateRef.current = gameState
   scoreRef.current = score
@@ -124,10 +130,26 @@ export function useGame(levelConfig = null) {
   isTimedModeRef.current = isTimedMode
 
   const calculateSpeed = useCallback((currentScore) => {
-    // V6: 限时模式使用固定档位速度
-    if (isTimedModeRef.current) {
-      return getTimedSpeed(currentScore)
+    // V13: Get current mode for speed tier lookup
+    const settings = advancedSettingsRef.current
+
+    // V13: 无尽模式使用高级设置的速度档位
+    if (!levelConfigRef.current && !isTimedModeRef.current) {
+      // 无尽/普通模式: 使用玩家选择的档位
+      return getSpeedForMode('ENDLESS', settings.speedEndless)
     }
+
+    // V6: 限时模式使用高级设置的速度档位
+    if (isTimedModeRef.current) {
+      return getSpeedForMode('TIMED', settings.speedTimed)
+    }
+
+    // V13: 剧情模式使用高级设置的速度档位
+    if (levelConfigRef.current?.storyMode) {
+      return getSpeedForMode('STORY', settings.speedStory)
+    }
+
+    // 其他带levelConfig的模式（关卡挑战等）使用原有的speedMultiplier逻辑
     const level = Math.floor(currentScore / SPEED_INCREASE_INTERVAL)
     const baseSpeed = INITIAL_SPEED * Math.pow(SPEED_INCREASE_RATE, level)
     const speedMultiplier = levelConfigRef.current?.speedMultiplier || 1
@@ -177,7 +199,9 @@ export function useGame(levelConfig = null) {
     setGrid(createInitialGrid())
     setPointerCol(1)
     setScore(0)
-    setSpeed(INITIAL_SPEED * (levelConfigRef.current?.speedMultiplier || 1))
+    // V13: 使用高级设置的速度档位
+    const settings = loadAdvancedSettings()
+    setSpeed(getSpeedForMode('ENDLESS', settings.speedEndless))
     setLives(levelConfigRef.current?.lives || INITIAL_LIVES)
     setCombo(0)
     setCurrentPowerup(null)
@@ -198,7 +222,9 @@ export function useGame(levelConfig = null) {
     setGrid(createInitialGrid())
     setPointerCol(1)
     setScore(0)
-    setSpeed(TIMED_SPEED_TIER_1) // 800ms
+    // V13: 使用高级设置中的限时模式速度档位
+    const settings = loadAdvancedSettings()
+    setSpeed(getSpeedForMode('TIMED', settings.speedTimed))
     setCombo(0)
     setCurrentPowerup(null)
     setTimeLeft(TIMED_INITIAL_TIME)

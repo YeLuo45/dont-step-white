@@ -7,6 +7,13 @@ import { useGame } from '../hooks/useGame'
 import { useAudio } from '../hooks/useAudio'
 import { useAchievements } from '../hooks/useAchievements'
 import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES, SKINS } from '../utils/constants'
+import {
+  CONTROL_MODES,
+  SwipeGestureDetector,
+  GyroscopeDetector,
+  loadAdvancedSettings,
+  triggerVibration
+} from '../utils/controlModes'
 import './Game.css'
 
 export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onGoLevels, onHome, earnedCoins, soundEnabled, equippedSkin }) {
@@ -84,6 +91,65 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
   // V7: Audio hook for warning sounds
   const { playStepBlack, playStepWhite, playPowerup: playPowerupSound, playFail, playWarning } = useAudio()
   const lastWarningRef = useRef(null)
+
+  // V13: Load advanced settings
+  const [advancedSettings, setAdvancedSettings] = useState(loadAdvancedSettings)
+  const swipeDetectorRef = useRef(null)
+  const gyroDetectorRef = useRef(null)
+
+  // V13: Initialize control detectors
+  useEffect(() => {
+    setAdvancedSettings(loadAdvancedSettings())
+
+    // Initialize swipe detector
+    swipeDetectorRef.current = new SwipeGestureDetector((direction) => {
+      if (isPlaying && gameState === GAME_STATE_PLAYING) {
+        if (direction === 'left') moveLeft()
+        else moveRight()
+        if (advancedSettings.vibrationEnabled) triggerVibration([15])
+      }
+    }, advancedSettings.sensitivity)
+
+    // Initialize gyroscope detector
+    gyroDetectorRef.current = new GyroscopeDetector((direction) => {
+      if (isPlaying && gameState === GAME_STATE_PLAYING) {
+        if (direction === 'left') moveLeft()
+        else moveRight()
+        if (advancedSettings.vibrationEnabled) triggerVibration([15])
+      }
+    }, advancedSettings.sensitivity)
+
+    return () => {
+      if (gyroDetectorRef.current) {
+        gyroDetectorRef.current.stop()
+      }
+    }
+  }, [])
+
+  // V13: Start/stop gyroscope based on control mode
+  useEffect(() => {
+    if (!gyroDetectorRef.current) return
+
+    if (isPlaying && advancedSettings.controlMode === CONTROL_MODES.GYROSCOPE) {
+      const status = gyroDetectorRef.current.start()
+      if (status === 'permission_required') {
+        // iOS requires user gesture to request permission
+        console.log('Gyroscope permission required')
+      }
+    } else {
+      gyroDetectorRef.current.stop()
+    }
+  }, [isPlaying, advancedSettings.controlMode])
+
+  // V13: Update swipe sensitivity
+  useEffect(() => {
+    if (swipeDetectorRef.current) {
+      swipeDetectorRef.current.updateSensitivity(advancedSettings.sensitivity)
+    }
+    if (gyroDetectorRef.current) {
+      gyroDetectorRef.current.updateSensitivity(advancedSettings.sensitivity)
+    }
+  }, [advancedSettings.sensitivity])
 
   const isPlaying = gameState === GAME_STATE_PLAYING
   const isPaused = gameState === GAME_STATE_PAUSED
@@ -184,7 +250,8 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
       else moveRight()
     }
     stepOn()
-  }, [pointerCol, moveLeft, moveRight, stepOn])
+    if (advancedSettings.vibrationEnabled) triggerVibration([30])
+  }, [pointerCol, moveLeft, moveRight, stepOn, advancedSettings.vibrationEnabled])
 
   const handleKeyDown = useCallback((e) => {
     if (isIdle) {
@@ -214,11 +281,33 @@ export function Game({ mode, levelId, customLevelGrid, onGameOver, onGoShop, onG
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX }
+  // V13: Handle touch based on control mode
+  const handleTouchStart = (e) => {
+    if (advancedSettings.controlMode === CONTROL_MODES.SWIPE && swipeDetectorRef.current) {
+      swipeDetectorRef.current.handleTouchStart(e)
+    }
+    // Always record start X for click detection
+    touchStartX.current = e.touches[0].clientX
+  }
+
   const handleTouchEnd = (e) => {
-    if (touchStartX.current === null) return
-    const diff = e.changedTouches[0].clientX - touchStartX.current
-    if (Math.abs(diff) > 30) diff < 0 ? moveLeft() : moveRight()
+    // V13: Handle swipe in swipe mode
+    if (advancedSettings.controlMode === CONTROL_MODES.SWIPE && swipeDetectorRef.current) {
+      swipeDetectorRef.current.handleTouchEnd(e)
+    }
+
+    // Handle tap/step for touch or swipe mode (step on tap)
+    if (advancedSettings.controlMode !== CONTROL_MODES.GYROSCOPE) {
+      if (touchStartX.current !== null) {
+        const diff = e.changedTouches[0].clientX - touchStartX.current
+        // If minimal movement, treat as tap/step
+        if (Math.abs(diff) < 10) {
+          stepOn()
+          if (advancedSettings.vibrationEnabled) triggerVibration([30])
+        }
+      }
+    }
+
     touchStartX.current = null
   }
 
