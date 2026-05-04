@@ -112,7 +112,7 @@ function App() {
     // Stay on game page, game component will restart
   }, [])
 
-  // Navigate back to home
+  // V7: Start BGM when navigating to menu
   const handleBackToHome = useCallback(() => {
     setCurrentPage(PAGE_HOME)
     setSelectedLevel(null)

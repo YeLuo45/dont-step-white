@@ -4,6 +4,7 @@ import { ScoreBoard } from './ScoreBoard'
 import { Controls } from './Controls'
 import { GameOver } from './GameOver'
 import { useGame } from '../hooks/useGame'
+import { useAudio } from '../hooks/useAudio'
 import { GAME_STATE_IDLE, GAME_STATE_PLAYING, GAME_STATE_PAUSED, GAME_STATE_GAME_OVER, LEVELS, INITIAL_LIVES } from '../utils/constants'
 import './Game.css'
 
@@ -54,7 +55,11 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
   } = useGame(levelConfig)
 
   const [localTimeLeft, setLocalTimeLeft] = useState(levelConfig?.timeLimit)
-  const timerRef = useRef(null)
+  const intervalRef = useRef(null)
+
+  // V7: Audio hook for warning sounds
+  const { playStepBlack, playStepWhite, playPowerup: playPowerupSound, playFail, playWarning } = useAudio()
+  const lastWarningRef = useRef(null)
 
   const isPlaying = gameState === GAME_STATE_PLAYING
   const isPaused = gameState === GAME_STATE_PAUSED
@@ -80,6 +85,11 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
 
     timerRef.current = setInterval(() => {
       setLocalTimeLeft(prev => {
+        // V7: Warning sound at 10, 5, 4, 3, 2, 1 seconds
+        if (prev <= 10 && prev > 1 && lastWarningRef.current !== prev) {
+          lastWarningRef.current = prev
+          playWarning()
+        }
         if (prev <= 1) {
           clearInterval(timerRef.current)
           timerRef.current = null
@@ -104,6 +114,15 @@ export function Game({ mode, levelId, onGameOver, onGoShop, onGoLevels, onHome, 
       onGameOver(score, isEndless)
     }
   }, [isGameOver, score, isEndless, onGameOver])
+
+  // V7: Warning sound for timed mode countdown < 10s
+  useEffect(() => {
+    if (!isTimedMode || !isPlaying) return
+    if (timeLeft <= 10 && timeLeft > 1 && lastWarningRef.current !== timeLeft) {
+      lastWarningRef.current = timeLeft
+      playWarning()
+    }
+  }, [timeLeft, isTimedMode, isPlaying, playWarning])
 
   const touchStartX = useRef(null)
 

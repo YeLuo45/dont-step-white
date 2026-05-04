@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useV4Leaderboard, encodeShareData, formatShareDate, isShareExpired } from '../hooks/useV4Leaderboard'
+import { useAudio } from '../hooks/useAudio'
 import './GameOver.css'
 
 export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoins = 0, levelId = null, onGoShop, onGoLevels, equippedSkin, isTimedMode = false }) {
@@ -7,8 +8,14 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
   const [showShare, setShowShare] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [toast, setToast] = useState(null)
-  
+
   const { addSharedRecord, generateShareUrl } = useV4Leaderboard()
+  const { playClick, stopBGM } = useAudio()
+
+  // V7: Stop BGM when game over
+  useEffect(() => {
+    stopBGM()
+  }, [stopBGM])
 
   useEffect(() => {
     if (bestData?.nickname) {
@@ -36,11 +43,12 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
   }
 
   const handleShare = async () => {
+    playClick()
     if (!nickname) {
       showToast('请先输入昵称')
       return
     }
-    
+
     if (!shareUrl) {
       showToast('分享链接生成失败')
       return
@@ -55,7 +63,7 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
       try {
         const shareData = {
           title: isTimedMode ? '别踩白块 V6 限时挑战' : '别踩白块 V4',
-          text: isTimedMode 
+          text: isTimedMode
             ? `别踩白块 V6 限时挑战 - ${nickname} 得到了 ${score} 分！⏱️`
             : `别踩白块 V4 - ${nickname} 得到了 ${score} 分！🏆`,
           url: shareUrl
@@ -76,8 +84,9 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
   }
 
   const handleCopyLink = async () => {
+    playClick()
     if (!shareUrl) return
-    
+
     try {
       await navigator.clipboard.writeText(shareUrl)
       showToast('已复制分享链接!')
@@ -100,7 +109,23 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
   }
 
   const handleHome = () => {
+    playClick()
     window.location.reload()
+  }
+
+  const handleRestart = () => {
+    playClick()
+    onRestart()
+  }
+
+  const handleGoShop = () => {
+    playClick()
+    onGoShop()
+  }
+
+  const handleGoLevels = () => {
+    playClick()
+    onGoLevels()
   }
 
   return (
@@ -155,10 +180,10 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
 
         {/* 3 buttons */}
         <div className="game-over-buttons">
-          <button className="restart-btn" onClick={onRestart}>重新开始</button>
+          <button className="restart-btn" onClick={handleRestart}>重新开始</button>
           <div className="game-over-shortcuts">
-            {!isTimedMode && <button className="shortcut-btn shop-btn" onClick={onGoShop}>商店</button>}
-            {!isTimedMode && <button className="shortcut-btn levels-btn" onClick={onGoLevels}>关卡</button>}
+            {!isTimedMode && <button className="shortcut-btn shop-btn" onClick={handleGoShop}>商店</button>}
+            {!isTimedMode && <button className="shortcut-btn levels-btn" onClick={handleGoLevels}>关卡</button>}
           </div>
           <button className="home-btn" onClick={handleHome}>返回主页</button>
           <button className="share-btn" onClick={handleShare}>分享</button>
@@ -172,7 +197,7 @@ export function GameOver({ score, bestData, isNewHighScore, onRestart, earnedCoi
           </div>
         )}
       </div>
-      
+
       {toast && <div className="share-toast">{toast}</div>}
     </div>
   )

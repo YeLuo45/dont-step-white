@@ -80,7 +80,7 @@ export function useGame(levelConfig = null) {
   const [timeLeft, setTimeLeft] = useState(TIMED_INITIAL_TIME)
   const [isTimedMode, setIsTimedMode] = useState(false)
 
-  const { playStep, playFail } = useAudio()
+  const { playStepBlack, playStepWhite, playPowerup: playPowerupSound, playFail } = useAudio()
   const intervalRef = useRef(null)
   const freezeTimerRef = useRef(null)
   const doubleCountRef = useRef(0)
@@ -257,12 +257,14 @@ export function useGame(levelConfig = null) {
 
     // V6: 限时模式踩白块立即结束
     if (targetCell === CELL_WHITE) {
+      playStepWhite()
       if (isTimedModeRef.current) {
         endTimedGame()
         return
       }
       // V2: 踩白块 - 护盾则免疫，否则-1命
       if (currentPowerupRef.current === POWERUP_SHIELD) {
+        playPowerupSound()
         setCurrentPowerup(null)
         // 清除白块但不减命
         const newGrid = currentGrid.map((row, rowIdx) =>
@@ -286,6 +288,7 @@ export function useGame(levelConfig = null) {
     }
 
     // 踩黑块
+    playStepBlack()
     let earnedScore = 1
     let newCombo = comboRef.current + 1
     earnedScore = newCombo * 2
@@ -312,8 +315,7 @@ export function useGame(levelConfig = null) {
     setCombo(newCombo)
     setSpeed(calculateSpeed(newScore))
     tryDropPowerup(newScore)
-    playStep()
-  }, [calculateSpeed, playStep, loseLife, tryDropPowerup, addTime, endTimedGame])
+  }, [calculateSpeed, playStepBlack, playStepWhite, playPowerupSound, loseLife, tryDropPowerup, addTime, endTimedGame])
 
   const moveLeft = useCallback(() => {
     if (gameStateRef.current !== GAME_STATE_PLAYING) return
